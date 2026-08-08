@@ -1,0 +1,37 @@
+# ── Gradle / Android ──────────────────────────────────────────────────────────
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+
+# ── IDE ────────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.zcode/
+.freebuff/
+
+# ── Python ─────────────────────────────────────────────────────────────────────
+venv/
+.venv/
+python/.venv/
+__pycache__/
+*.pyc
+*.pyo
+python/config.ini
+python/dist/
+python/build/
+*.spec
+
+# ── Secrets & keys ─────────────────────────────────────────────────────────────
+keystore/*.jks
+keystore/*.keystore
+keystore/*.p12
+
+# ── Build artefacts ────────────────────────────────────────────────────────────
+build_log*.txt
+*.rar
+
+# ── macOS ──────────────────────────────────────────────────────────────────────
+.DS_Store

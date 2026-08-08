@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Media downloaded from S3 is cached under cacheDir/s3media -->
+    <cache-path name="s3media" path="s3media/" />
+</paths>
