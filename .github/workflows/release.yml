@@ -43,7 +43,7 @@ jobs:
           KEYSTORE_PATH: ${{ github.workspace }}/keystore/release.jks
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: ./gradlew assembleRelease -x lintVitalRelease --no-daemon
 
       - name: Rename APK with version tag
