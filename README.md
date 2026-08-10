@@ -62,12 +62,20 @@ copy config.example.ini config.ini
 ## ☁️ Setting up the ArvanCloud Bucket (Serverless backend)
 
 To use ArvanShare, you need one shared bucket where all the data lives.
+You will need 4 pieces of information: **Bucket Name**, **S3 Endpoint**, **Access Key**, and **Secret Key**. Follow these steps to get them:
 
-1. Go to [panel.arvancloud.ir](https://panel.arvancloud.ir) -> **Object Storage**.
-2. **Create a bucket** (e.g. `my-family-share`).
-3. Note the **S3 Endpoint** (e.g. `https://s3.ir-thr-at1.arvanstorage.ir`).
-4. Go to **API Keys** and generate a key pair (**Access Key** and **Secret Key**).
-5. Attach the key to your new bucket with read/write permissions.
+1. **Create a Bucket:**
+   - Go to [panel.arvancloud.ir](https://panel.arvancloud.ir) -> **Object Storage**.
+   - Click **New Bucket**. Choose a unique name (e.g. `my-family-share`) and set the access level to **Private**. This is your **Bucket Name**.
+
+2. **Get the S3 Endpoint:**
+   - In the Object Storage dashboard, you will see the **S3 Endpoint** URL corresponding to your region (e.g., `https://s3.ir-thr-at1.arvanstorage.ir`). This is your **Endpoint**.
+
+3. **Generate API Keys (Access & Secret Key):**
+   - Go to **API Keys** in the Object Storage menu.
+   - Click **New Key**. Give it a name and ensure the access level is **Read & Write**.
+   - **Important:** Attach this new key to the bucket you created in step 1.
+   - Once created, you will be shown the **Access Key** and **Secret Key**. *(Note: The Secret Key is only shown once, so save it somewhere safe)*.
 
 Give these 4 pieces of info (Endpoint, Bucket, Access Key, Secret Key) to everyone in your circle. They will enter them into the app on first launch.
 
