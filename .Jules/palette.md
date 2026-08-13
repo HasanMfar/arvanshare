@@ -1,0 +1,3 @@
+## 2025-05-16 - Keyboard Navigation and Input Types in Compose Forms
+**Learning:** In long Jetpack Compose forms (like the 5-field SetupScreen), relying on default `OutlinedTextField` behaviors leads to poor UX. Users have to tap out of the field to move to the next one, and fields don't provide the correct virtual keyboard layout (e.g. URI, Password) or capitalization rules (Words, Sentences).
+**Action:** Always add `KeyboardOptions` to text inputs. Use `imeAction = ImeAction.Next` to link fields together, and use `ImeAction.Done` for the final field. Set appropriate `keyboardType` (like `KeyboardType.Uri` or `KeyboardType.Password`) and `capitalization` (like `KeyboardCapitalization.Words` or `KeyboardCapitalization.Sentences`) depending on the context.
