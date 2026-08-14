@@ -34,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -105,6 +107,10 @@ fun SetupScreen(vm: AppViewModel) {
             label = { Text("Your display name") },
             singleLine = true,
             shape = MaterialTheme.shapes.medium,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Words,
+                imeAction = ImeAction.Next
+            ),
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
@@ -113,6 +119,10 @@ fun SetupScreen(vm: AppViewModel) {
             label = { Text("S3 endpoint") },
             placeholder = { Text("https://s3.ir-thr-at1.arvanstorage.ir") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Uri,
+                imeAction = ImeAction.Next
+            ),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -122,6 +132,9 @@ fun SetupScreen(vm: AppViewModel) {
             label = { Text("Bucket name") },
             singleLine = true,
             shape = MaterialTheme.shapes.medium,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next
+            ),
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
@@ -129,7 +142,10 @@ fun SetupScreen(vm: AppViewModel) {
             onValueChange = { accessKey = it },
             label = { Text("Access key") },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Next
+            ),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -139,7 +155,10 @@ fun SetupScreen(vm: AppViewModel) {
             label = { Text("Secret key") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
