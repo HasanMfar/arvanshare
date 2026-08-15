@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -52,6 +55,7 @@ fun SetupScreen(vm: AppViewModel) {
     var accessKey by rememberSaveable { mutableStateOf(settings.accessKey) }
     var secretKey by rememberSaveable { mutableStateOf(settings.secretKey) }
     var testResult by remember { mutableStateOf<String?>(null) }
+    val focusManager = LocalFocusManager.current
 
     val valid = name.isNotBlank() && endpoint.isNotBlank() && bucket.isNotBlank() &&
         accessKey.isNotBlank() && secretKey.isNotBlank()
@@ -104,6 +108,7 @@ fun SetupScreen(vm: AppViewModel) {
             onValueChange = { name = it },
             label = { Text("Your display name") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -113,6 +118,7 @@ fun SetupScreen(vm: AppViewModel) {
             label = { Text("S3 endpoint") },
             placeholder = { Text("https://s3.ir-thr-at1.arvanstorage.ir") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -121,6 +127,7 @@ fun SetupScreen(vm: AppViewModel) {
             onValueChange = { bucket = it },
             label = { Text("Bucket name") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -129,7 +136,7 @@ fun SetupScreen(vm: AppViewModel) {
             onValueChange = { accessKey = it },
             label = { Text("Access key") },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -139,7 +146,8 @@ fun SetupScreen(vm: AppViewModel) {
             label = { Text("Secret key") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
