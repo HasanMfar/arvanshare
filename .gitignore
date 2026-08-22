@@ -28,6 +28,8 @@ python/build/
 keystore/*.jks
 keystore/*.keystore
 keystore/*.p12
+base64_keystore.txt
+job_log.txt
 
 # ── Build artefacts ────────────────────────────────────────────────────────────
 build_log*.txt

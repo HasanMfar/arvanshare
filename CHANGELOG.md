@@ -5,6 +5,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.0.0-beta.2] — 2026-08-22
+
+### Changed
+- **Android UI readability pass** (all screens, both themes)
+  - Brighter secondary text colour in dark mode, darker in light mode — timestamps,
+    likes lists, hints and errors are clearly legible now.
+  - Explicit `outline` colours so text-field borders stand out.
+  - Base small-text size raised from 12sp to 13sp.
+
+### Fixed
+- Avatar initials were nearly invisible on bright palette entries (e.g. white on
+  orange); the palette now uses darker shades that keep white text readable.
+- "Comments" heading no longer styled dimmer than body text.
+- Post editor and comment box use persistent floating labels instead of
+  disappearing placeholders.
+- Setup description and connection-result chip enlarged to 14sp.
+
+### Repository
+- Repaired a corrupted (UTF-16) `gradle.properties`.
+- Ignore `base64_keystore.txt` / `job_log.txt` so signing material can never be committed.
+
 ## [1.0.0-beta.1] — 2026-08-08
 
 ### Added
