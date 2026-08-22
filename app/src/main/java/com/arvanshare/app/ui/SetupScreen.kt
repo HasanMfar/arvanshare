@@ -104,6 +104,10 @@ fun SetupScreen(vm: AppViewModel) {
             onValueChange = { name = it },
             label = { Text("Your display name") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words,
+                imeAction = androidx.compose.ui.text.input.ImeAction.Next
+            ),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -113,6 +117,10 @@ fun SetupScreen(vm: AppViewModel) {
             label = { Text("S3 endpoint") },
             placeholder = { Text("https://s3.ir-thr-at1.arvanstorage.ir") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Uri,
+                imeAction = androidx.compose.ui.text.input.ImeAction.Next
+            ),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -121,6 +129,9 @@ fun SetupScreen(vm: AppViewModel) {
             onValueChange = { bucket = it },
             label = { Text("Bucket name") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                imeAction = androidx.compose.ui.text.input.ImeAction.Next
+            ),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -129,7 +140,10 @@ fun SetupScreen(vm: AppViewModel) {
             onValueChange = { accessKey = it },
             label = { Text("Access key") },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = androidx.compose.ui.text.input.ImeAction.Next
+            ),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -139,7 +153,10 @@ fun SetupScreen(vm: AppViewModel) {
             label = { Text("Secret key") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = androidx.compose.ui.text.input.ImeAction.Done
+            ),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
