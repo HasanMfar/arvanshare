@@ -95,7 +95,7 @@ fun ComposePostScreen(vm: AppViewModel, onDone: () -> Unit) {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
-                placeholder = { Text("What's on your mind?") },
+                label = { Text("What's on your mind?") },
                 minLines = 5,
                 shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.fillMaxWidth(),
@@ -186,7 +186,7 @@ fun ComposePostScreen(vm: AppViewModel, onDone: () -> Unit) {
                 Text(
                     it,
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
 

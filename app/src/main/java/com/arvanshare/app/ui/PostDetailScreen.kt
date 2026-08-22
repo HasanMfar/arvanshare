@@ -119,9 +119,8 @@ fun PostDetailScreen(vm: AppViewModel, onBack: () -> Unit) {
             item {
                 Text(
                     "Comments",
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp),
                 )
             }
@@ -136,7 +135,7 @@ fun PostDetailScreen(vm: AppViewModel, onBack: () -> Unit) {
                         Text(
                             "No comments yet. Be the first!",
                             modifier = Modifier.padding(14.dp),
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -187,7 +186,7 @@ fun PostDetailScreen(vm: AppViewModel, onBack: () -> Unit) {
                     OutlinedTextField(
                         value = draft,
                         onValueChange = { draft = it },
-                        placeholder = { Text("Add a comment…") },
+                        label = { Text("Add a comment") },
                         modifier = Modifier.weight(1f),
                         maxLines = 3,
                         shape = MaterialTheme.shapes.medium,
@@ -255,7 +254,7 @@ private fun LikesRow(
             Text(
                 text = if (likes.isEmpty()) "No likes yet"
                        else "${likes.size} like${if (likes.size == 1) "" else "s"}: ${likes.joinToString(", ")}",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

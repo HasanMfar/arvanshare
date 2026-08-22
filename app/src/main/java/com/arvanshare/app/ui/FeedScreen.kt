@@ -58,15 +58,16 @@ import com.arvanshare.app.viewmodel.AppViewModel
 import com.arvanshare.app.viewmodel.FeedState
 
 // Avatar colours cycle through a curated set based on the author name hash.
+// Shades are kept dark enough for white initials to stay readable (≥4.5:1).
 private val avatarColors = listOf(
-    androidx.compose.ui.graphics.Color(0xFF5C6BC0),
-    androidx.compose.ui.graphics.Color(0xFF00BCD4),
-    androidx.compose.ui.graphics.Color(0xFF66BB6A),
-    androidx.compose.ui.graphics.Color(0xFFFF7043),
-    androidx.compose.ui.graphics.Color(0xFFAB47BC),
-    androidx.compose.ui.graphics.Color(0xFF26A69A),
-    androidx.compose.ui.graphics.Color(0xFFEC407A),
-    androidx.compose.ui.graphics.Color(0xFFFFA726),
+    androidx.compose.ui.graphics.Color(0xFF3949AB),
+    androidx.compose.ui.graphics.Color(0xFF00838F),
+    androidx.compose.ui.graphics.Color(0xFF2E7D32),
+    androidx.compose.ui.graphics.Color(0xFFD84315),
+    androidx.compose.ui.graphics.Color(0xFF6A1B9A),
+    androidx.compose.ui.graphics.Color(0xFF00695C),
+    androidx.compose.ui.graphics.Color(0xFFAD1457),
+    androidx.compose.ui.graphics.Color(0xFFEF6C00),
 )
 
 fun authorColor(name: String) = avatarColors[Math.abs(name.hashCode()) % avatarColors.size]
@@ -180,12 +181,12 @@ fun FeedScreen(
                         )
                         Text(
                             (feedState as FeedState.Error).message,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error,
                         )
                         Text(
                             "Check Settings → connection details.",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }

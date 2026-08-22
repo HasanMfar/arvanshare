@@ -92,7 +92,7 @@ fun SetupScreen(vm: AppViewModel) {
             )
             Text(
                 "A private feed for your circle, stored directly on ArvanCloud S3.\nEnter the shared bucket details once — saved only on this device.",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -156,7 +156,7 @@ fun SetupScreen(vm: AppViewModel) {
                 Text(
                     text = if (isOk) "✓  $result" else "✗  $result",
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = if (isOk) MaterialTheme.colorScheme.onPrimaryContainer
                             else MaterialTheme.colorScheme.onErrorContainer,

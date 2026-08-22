@@ -41,7 +41,8 @@ private val DarkColors = darkColorScheme(
     surface          = SurfaceDark,
     onSurface        = OnSurfaceDark,
     surfaceVariant   = SurfaceVarDark,
-    onSurfaceVariant = Color(0xFF9FA8DA),
+    onSurfaceVariant = Color(0xFFB9C1EA),
+    outline          = Color(0xFF8A90C8),
     error            = ErrorRed,
     onError          = Color.White,
 )
@@ -60,7 +61,8 @@ private val LightColors = lightColorScheme(
     surface          = SurfaceLight,
     onSurface        = Color(0xFF1A1B2E),
     surfaceVariant   = SurfaceVarLight,
-    onSurfaceVariant = Color(0xFF4A4C6A),
+    onSurfaceVariant = Color(0xFF383A52),
+    outline          = Color(0xFF767A9E),
     error            = ErrorRed,
     onError          = Color.White,
 )
@@ -75,10 +77,10 @@ private val AppTypography = Typography(
     titleSmall    = TextStyle(fontWeight = FontWeight.Medium,  fontSize = 14.sp, lineHeight = 20.sp),
     bodyLarge     = TextStyle(fontWeight = FontWeight.Normal,  fontSize = 16.sp, lineHeight = 24.sp),
     bodyMedium    = TextStyle(fontWeight = FontWeight.Normal,  fontSize = 14.sp, lineHeight = 20.sp),
-    bodySmall     = TextStyle(fontWeight = FontWeight.Normal,  fontSize = 12.sp, lineHeight = 16.sp),
+    bodySmall     = TextStyle(fontWeight = FontWeight.Normal,  fontSize = 13.sp, lineHeight = 18.sp),
     labelLarge    = TextStyle(fontWeight = FontWeight.Medium,  fontSize = 14.sp, lineHeight = 20.sp),
     labelMedium   = TextStyle(fontWeight = FontWeight.Medium,  fontSize = 12.sp, lineHeight = 16.sp),
-    labelSmall    = TextStyle(fontWeight = FontWeight.Medium,  fontSize = 11.sp, lineHeight = 16.sp),
+    labelSmall    = TextStyle(fontWeight = FontWeight.Medium,  fontSize = 12.sp, lineHeight = 16.sp),
 )
 
 @Composable
