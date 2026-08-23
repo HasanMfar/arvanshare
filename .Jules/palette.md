@@ -1,0 +1,3 @@
+## 2024-05-24 - Setup Screen Keyboard Navigation
+**Learning:** In Android Jetpack Compose forms with multiple sequential TextFields, failing to explicitly specify an `ImeAction` (such as `ImeAction.Next`) breaks keyboard navigation flow. Users are forced to manually dismiss the keyboard and tap the next field, severely degrading mobile UX, especially during onboarding/setup flows.
+**Action:** Always specify `KeyboardOptions(imeAction = ImeAction.Next)` for intermediate form fields and `ImeAction.Done` for the final field to enable seamless hardware/software keyboard navigation. Consider relevant `KeyboardType` (e.g., Uri, Password) and `KeyboardCapitalization` where applicable.
