@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+  <!-- Primary Meta Tags -->
+  <title>ArvanShare — Serverless Private Social Feed Powered by ArvanCloud S3</title>
+  <meta name="title" content="ArvanShare — Serverless Private Social Feed Powered by ArvanCloud S3" />
+  <meta name="description" content="A serverless, private social feed designed for close circles, powered directly by ArvanCloud Object Storage (S3). Zero backend servers, zero database costs." />
+  <meta name="keywords" content="arvanshare, arvancloud, serverless, private social media, s3 social network, jetpack compose, android, python tkinter, boto3, room database" />
+  <meta name="author" content="HasanMfar" />
+  <meta name="theme-color" content="#12131A" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://hasanmfar.github.io/arvanshare/" />
+  <meta property="og:title" content="ArvanShare — Serverless Private Social Network" />
+  <meta property="og:description" content="100% Serverless social feed on ArvanCloud S3. Native Android app, Windows desktop client & CLI." />
+  <meta property="og:image" content="assets/hero-mockup.svg" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://hasanmfar.github.io/arvanshare/" />
+  <meta property="twitter:title" content="ArvanShare — Serverless Private Social Network" />
+  <meta property="twitter:description" content="100% Serverless social feed on ArvanCloud S3. Native Android app, Windows desktop client & CLI." />
+  <meta property="twitter:image" content="assets/hero-mockup.svg" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+
+  <!-- Google Fonts (Inter + Outfit + Vazirmatn) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Vazirmatn:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Ambient Glowing Background Blobs -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+    <div class="ambient-blob blob-3"></div>
+  </div>
+
+  <!-- ── HEADER & NAVIGATION ─────────────────────────────────────────────── -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="#hero" class="nav-brand">
+        <img src="assets/logo.svg" alt="ArvanShare Logo" class="nav-logo" />
+        <span>ArvanShare</span>
+        <span class="brand-badge">S3 Core</span>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#features" class="nav-link" data-i18n="navFeatures">ویژگی‌ها</a></li>
+          <li><a href="#simulator" class="nav-link" data-i18n="navSimulator">دموی آنلاین</a></li>
+          <li><a href="#architecture" class="nav-link" data-i18n="navArch">معماری ابری</a></li>
+          <li><a href="#setup" class="nav-link" data-i18n="navSetup">راهنمای راه‌اندازی</a></li>
+          <li><a href="#download" class="nav-link" data-i18n="navDownload">دانلود برنامه</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <!-- Language Switcher -->
+        <button id="lang-toggle-btn" class="icon-btn" title="تغییر زبان / Switch Language">
+          <span>🌐</span> 🇺🇸 English
+        </button>
+
+        <!-- Theme Switcher -->
+        <button id="theme-toggle-btn" class="icon-btn" title="تغییر تم / Toggle Theme">
+          <span>🌙</span> <span data-i18n="themeDark">تاریک</span>
+        </button>
+
+        <!-- GitHub Repository Button -->
+        <a href="https://github.com/HasanMfar/arvanshare" target="_blank" rel="noopener noreferrer" class="icon-btn btn-github">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN CONTENT ─────────────────────────────────────────────────────── -->
+  <main>
+    <!-- ── HERO SECTION ───────────────────────────────────────────────────── -->
+    <section id="hero" class="hero">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <div class="hero-badge-container">
+            <div class="hero-pill">
+              <span class="dot"></span>
+              <span data-i18n="heroPill">۱۰۰٪ بدون سرور (Serverless) و بدون دیتابیس</span>
+            </div>
+            <a href="https://github.com/HasanMfar/arvanshare/releases/latest" target="_blank" class="hero-pill" style="border-color: var(--primary);">
+              <span>🚀 v1.0.0-beta.2</span>
+            </a>
+          </div>
+
+          <h1 class="hero-title">
+            <span data-i18n="heroTitlePrefix">شبکه اجتماعی خصوصی قدرت گرفته از </span>
+            <span class="gradient-text" data-i18n="heroTitleHighlight">فضای ابری آروان‌کلاد</span>
+          </h1>
+
+          <p class="hero-subtitle" data-i18n="heroSubtitle">
+            یک فید اختصاصی و صمیمی برای دوستان، خانواده یا تیم کاری شما. بدون نیاز به سرور بک‌اند، بدون هزینه نگهداری دیتابیس، با همگام‌سازی مستقیم و اتمیک روی باکت S3.
+          </p>
+
+          <div class="hero-cta">
+            <a href="https://github.com/HasanMfar/arvanshare/releases/latest" target="_blank" class="btn btn-primary btn-lg" data-i18n="btnDownloadApk">
+              📱 دانلود نسخه اندروید (APK)
+            </a>
+            <a href="https://github.com/HasanMfar/arvanshare/releases/latest" target="_blank" class="btn btn-secondary btn-lg" data-i18n="btnDownloadExe">
+              💻 دانلود نسخه ویندوز (EXE)
+            </a>
+            <a href="#simulator" class="btn btn-accent btn-lg" data-i18n="btnExploreDemo">
+              ⚡ اجرای شبیه‌ساز آنلاین
+            </a>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat-item">
+              <h3 data-i18n="statServerless">Serverless</h3>
+              <p data-i18n="statServerlessSub">اتصال ۱۰۰٪ مستقیم به S3</p>
+            </div>
+            <div class="stat-item">
+              <h3 data-i18n="statDb">۰ دیتابیس</h3>
+              <p data-i18n="statDbSub">بدون بار و سرور بک‌اند</p>
+            </div>
+            <div class="stat-item">
+              <h3 data-i18n="statOffline">آفلاین-فرست</h3>
+              <p data-i18n="statOfflineSub">کش سریع با Room DB</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-preview">
+          <div class="hero-mockup-frame">
+            <img src="assets/hero-mockup.svg" alt="ArvanShare Android & Windows Client Mockup" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── INTERACTIVE SIMULATOR SECTION ───────────────────────────────────── -->
+    <section id="simulator" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag" data-i18n="simTag">شبیه‌ساز تعاملی</span>
+          <h2 class="section-title" data-i18n="simTitle">عملکرد آروان‌شیر را زنده تجربه کنید</h2>
+          <p class="section-desc" data-i18n="simDesc">
+            یک پیام بفرستید یا پستی را لایک کنید. در پنل روبرو مشاهده کنید که چگونه کلیدهای اتمیک S3 بدون نیاز به هیچ دیتابیسی به‌روزرسانی می‌شوند!
+          </p>
+        </div>
+
+        <div class="simulator-card">
+          <!-- Feed Simulation Pane -->
+          <div class="sim-pane sim-pane-feed">
+            <div class="sim-header">
+              <div class="sim-user-picker">
+                <span class="sim-user-label" data-i18n="simActiveUser">کاربر فعال:</span>
+                <div class="user-chips">
+                  <button class="user-chip active" data-user="Ali">Ali</button>
+                  <button class="user-chip" data-user="Sara">Sara</button>
+                  <button class="user-chip" data-user="Reza">Reza</button>
+                  <button class="user-chip" data-user="Hasan">Hasan</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Compose Post Box -->
+            <div class="sim-compose">
+              <textarea id="sim-post-text" class="sim-compose-input" placeholder="به چه چیزی فکر می‌کنید؟ در صندوقچه اختصاصی خود به اشتراک بگذارید..." data-i18n-ph="simPlaceholder"></textarea>
+              <div class="sim-compose-footer">
+                <span style="font-size: 0.78rem; color: var(--text-dim);">Enter to post</span>
+                <button id="sim-post-btn" class="btn btn-primary" style="padding: 6px 16px; font-size: 0.88rem;" data-i18n="simBtnPost">
+                  ارسال به S3
+                </button>
+              </div>
+            </div>
+
+            <!-- Simulated Feed List -->
+            <div id="sim-feed-container" class="sim-feed-list">
+              <!-- Dynamically populated by app.js -->
+            </div>
+          </div>
+
+          <!-- S3 Bucket Tree Pane -->
+          <div class="sim-pane sim-pane-s3">
+            <div class="sim-header">
+              <div>
+                <h4 style="font-size: 1.05rem; font-weight: 700;" data-i18n="simS3Header">☁️ کاوشگر باکت فضای ابری S3</h4>
+                <p style="font-size: 0.8rem; color: var(--text-dim);" data-i18n="simS3Sub">فایل‌ها و کلیدهای ذخیره شده روی آروان‌کلاد</p>
+              </div>
+            </div>
+
+            <div id="s3-tree-view" class="s3-tree-container">
+              <!-- Dynamically populated by app.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FEATURES GRID SECTION ─────────────────────────────────────────── -->
+    <section id="features" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag" data-i18n="featTag">چرا آروان‌شیر؟</span>
+          <h2 class="section-title" data-i18n="featTitle">طراحی شده برای امنیت، حریم خصوصی و نگهداری صفر</h2>
+          <p class="section-desc" data-i18n="featDesc">
+            با تبدیل فضای ذخیره‌سازی ابری آروان به یک موتور اجتماعی توزیع‌شده، دغدغه‌های مربوط به هاست، کرش کردن سرور و نشت دیتابیس به کلی حذف شده است.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <!-- Feature 1 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">🚀</div>
+            <h3 class="feature-title" data-i18n="f1Title">۱۰۰٪ بدون سرور (Serverless)</h3>
+            <p class="feature-desc" data-i18n="f1Desc">
+              بدون نیاز به بک‌اند Node.js، PHP یا جنگو. تمام درخواست‌ها به صورت مستقیم و امضا شده با کلید S3 انجام می‌شوند.
+            </p>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">📱</div>
+            <h3 class="feature-title" data-i18n="f2Title">پوشش چند پلتفرمی کامل</h3>
+            <p class="feature-desc" data-i18n="f2Desc">
+              دارای اپلیکیشن نیتیو اندروید با Jetpack Compose، کلاینت پرتابل ویندوز، و ابزار اسکریپت‌نویسی خط فرمان (CLI).
+            </p>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">🛡️</div>
+            <h3 class="feature-title" data-i18n="f3Title">ایمن در برابر تداخل (Race-Safe)</h3>
+            <p class="feature-desc" data-i18n="f3Desc">
+              لایک‌ها و کامنت‌ها فایل‌های اتمیک جداگانه دارند (مانند like_ali.txt)؛ بنابراین ارسال همزمان چند کاربر تداخلی ایجاد نمی‌کند.
+            </p>
+          </div>
+
+          <!-- Feature 4 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">⚡</div>
+            <h3 class="feature-title" data-i18n="f4Title">معماری آفلاین-فرست (Offline-First)</h3>
+            <p class="feature-desc" data-i18n="f4Desc">
+              اپلیکیشن اندروید تمام داده‌ها را در دیتابیس Room گوشی کش می‌کند تا در هر شرایطی فید به سرعت باز شود.
+            </p>
+          </div>
+
+          <!-- Feature 5 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">🔒</div>
+            <h3 class="feature-title" data-i18n="f5Title">حریم خصوصی اختصاصی حلقه</h3>
+            <p class="feature-desc" data-i18n="f5Desc">
+              دسترسی تنها با کلیدهای API باکت با امضای HMAC-SHA256 انجام می‌گیرد و داده‌ها خارج از باکت شما درز نمی‌کند.
+            </p>
+          </div>
+
+          <!-- Feature 6 -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">🎨</div>
+            <h3 class="feature-title" data-i18n="f6Title">پوسته‌های دارک و لایت مدرن</h3>
+            <p class="feature-desc" data-i18n="f6Desc">
+              رنگ‌بندی ایندیگو و فیروزه‌ای چشم‌نواز با پشتیبانی پیش‌فرض از دارک مود در تمام کلاینت‌ها.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ARCHITECTURE SECTION ───────────────────────────────────────────── -->
+    <section id="architecture" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag" data-i18n="archTag">زیر ذره‌بین مهندسی</span>
+          <h2 class="section-title" data-i18n="archTitle">معماری مستقیم به S3 بدون دیتابیس</h2>
+          <p class="section-desc" data-i18n="archDesc">
+            چگونگی چینش پست‌ها، پیوست‌های رسانه‌ای، کامنت‌ها و لایک‌ها در باکت آبجکت استوریج آروان‌کلاد.
+          </p>
+        </div>
+
+        <div class="arch-container">
+          <div class="arch-image-wrap">
+            <img src="assets/architecture-diagram.svg" alt="ArvanShare Serverless Architecture Diagram" />
+          </div>
+
+          <div class="arch-points">
+            <div class="arch-point-box">
+              <h4 data-i18n="archP1Title">📁 فایل‌های JSON و تصاویر</h4>
+              <p data-i18n="archP1Desc">هر پست یک فایل JSON مستقل همراه با فایل تصویر باکیفیت در پوشه /posts/ ذخیره می‌شود.</p>
+            </div>
+            <div class="arch-point-box">
+              <h4 data-i18n="archP2Title">💬 کامنت‌های تفکیک شده</h4>
+              <p data-i18n="archP2Desc">کامنت‌های هر پست در یک پوشه اختصاصی با شناسه همان پست (/comments/&lt;post_id&gt;/) ذخیره می‌شوند.</p>
+            </div>
+            <div class="arch-point-box">
+              <h4 data-i18n="archP3Title">🛡️ نشانگرهای لایک اتمیک</h4>
+              <p data-i18n="archP3Desc">هر لایک یک فایل متنی سبک است. متدهای PutObject و DeleteObject در S3 اتمیک و بدون تداخل هستند.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SETUP GUIDE SECTION ────────────────────────────────────────────── -->
+    <section id="setup" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag" data-i18n="setupTag">راه‌اندازی ساده</span>
+          <h2 class="section-title" data-i18n="setupTitle">۴ گام برای ساخت شبکه خصوصی شما</h2>
+          <p class="section-desc" data-i18n="setupDesc">
+            ساخت باکت در پنل آروان‌کلاد کمتر از ۲ دقیقه زمان می‌برد. مشخصات را به اعضای گروه بدهید و استفاده کنید.
+          </p>
+        </div>
+
+        <div class="setup-stepper">
+          <div class="step-card">
+            <div class="step-num" data-i18n="step1Num">۱</div>
+            <h3 class="step-title" data-i18n="step1Title">ساخت صندوقچه خصوصی</h3>
+            <p class="step-desc" data-i18n="step1Desc">
+              به پنل آروان‌کلاد -> فضای ابری رفته، روی صندوقچه جدید کلیک کرده و دسترسی را خصوصی بگذارید.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num" data-i18n="step2Num">۲</div>
+            <h3 class="step-title" data-i18n="step2Title">دریافت آدرس S3 Endpoint</h3>
+            <p class="step-desc" data-i18n="step2Desc">
+              آدرس اندپوینت منطقه خود را کپی کنید (مثلاً https://s3.ir-thr-at1.arvanstorage.ir).
+            </p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num" data-i18n="step3Num">۳</div>
+            <h3 class="step-title" data-i18n="step3Title">ساخت کلیدهای API</h3>
+            <p class="step-desc" data-i18n="step3Desc">
+              در بخش API Keys یک کلید خواندن و نوشتن ساخته و آن را به صندوقچه متصل (Attach) کنید.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num" data-i18n="step4Num">۴</div>
+            <h3 class="step-title" data-i18n="step4Title">ورود اطلاعات در برنامه</h3>
+            <p class="step-desc" data-i18n="step4Desc">
+              این ۴ مشخصه (نام باکت، اندپوینت، Access Key، Secret Key) را در اپلیکیشن وارد کنید.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── DOWNLOADS & CLI SECTION ────────────────────────────────────────── -->
+    <section id="download" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag" data-i18n="downTag">دریافت برنامه</span>
+          <h2 class="section-title" data-i18n="downTitle">دانلود کلاینت‌های آروان‌شیر</h2>
+          <p class="section-desc" data-i18n="downDesc">
+            دانلود مستقیم فایل APK امضا شده برای اندروید، نسخه پرتابل ویندوز یا اجرای ابزار پایتون.
+          </p>
+        </div>
+
+        <div class="download-grid">
+          <!-- Android Card -->
+          <div class="download-card">
+            <div class="download-icon">📱</div>
+            <h3 class="download-name" data-i18n="dAndroidTitle">اپلیکیشن اندروید</h3>
+            <p class="download-info" data-i18n="dAndroidDesc">توسعه داده شده با Kotlin و Jetpack Compose. سازگار با اندروید ۸ به بالا.</p>
+            <a href="https://github.com/HasanMfar/arvanshare/releases/latest" target="_blank" class="btn btn-primary" style="width: 100%;" data-i18n="dAndroidBtn">
+              دانلود فایل APK
+            </a>
+          </div>
+
+          <!-- Windows Card -->
+          <div class="download-card">
+            <div class="download-icon">💻</div>
+            <h3 class="download-name" data-i18n="dWinTitle">نسخه دسکتاپ ویندوز</h3>
+            <p class="download-info" data-i18n="dWinDesc">فایل پرتابل .EXE بدون نیاز به نصب پایتون و ابزارهای جانبی.</p>
+            <a href="https://github.com/HasanMfar/arvanshare/releases/latest" target="_blank" class="btn btn-secondary" style="width: 100%;" data-i18n="dWinBtn">
+              دانلود فایل EXE
+            </a>
+          </div>
+
+          <!-- CLI Card -->
+          <div class="download-card">
+            <div class="download-icon">🛠️</div>
+            <h3 class="download-name" data-i18n="dCliTitle">خط فرمان (CLI)</h3>
+            <p class="download-info" data-i18n="dCliDesc">ابزار پایتون جهت خودکارسازی و مدیریت فید. نیازمند پایتون ۳.۱۰+.</p>
+            <a href="https://github.com/HasanMfar/arvanshare/blob/main/README.md#%EF%B8%8F-command-line-interface-cli" target="_blank" class="btn btn-secondary" style="width: 100%;" data-i18n="dCliBtn">
+              مشاهده راهنمای CLI
+            </a>
+          </div>
+        </div>
+
+        <!-- CLI Quickstart Snippet -->
+        <div class="cli-box">
+          <div class="cli-command-wrap">
+            <span class="cli-prompt">$</span>
+            <code>python -m pip install -r requirements.txt &amp;&amp; python arvanshare.py list-posts</code>
+          </div>
+          <button id="copy-cli-btn" class="btn btn-secondary" style="padding: 8px 18px; font-size: 0.88rem;" data-i18n="copyBtn">
+            کپی دستور
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── FOOTER ───────────────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem;">
+            <img src="assets/logo.svg" alt="Logo" style="width: 30px; height: 30px;" />
+            <span>ArvanShare</span>
+          </div>
+          <p data-i18n="footerDesc">شبکه اجتماعی خصوصی و بدون سرور برای حلقه‌های صمیمی، قدرت گرفته از فضای ابری آروان‌کلاد.</p>
+        </div>
+
+        <div class="footer-links-group">
+          <div class="footer-col">
+            <h5>Navigation</h5>
+            <ul>
+              <li><a href="#hero">Home</a></li>
+              <li><a href="#features" data-i18n="navFeatures">ویژگی‌ها</a></li>
+              <li><a href="#simulator" data-i18n="navSimulator">دموی آنلاین</a></li>
+              <li><a href="#architecture" data-i18n="navArch">معماری</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h5>Open Source</h5>
+            <ul>
+              <li><a href="https://github.com/HasanMfar/arvanshare" target="_blank">GitHub Repository</a></li>
+              <li><a href="https://github.com/HasanMfar/arvanshare/releases" target="_blank">Releases</a></li>
+              <li><a href="https://github.com/HasanMfar/arvanshare/blob/main/CHANGELOG.md" target="_blank">Changelog</a></li>
+              <li><a href="https://github.com/HasanMfar/arvanshare/issues" target="_blank">Issues</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p data-i18n="footerDev">توسعه داده شده با ❤️ توسط HasanMfar</p>
+        <p data-i18n="footerLicense">تحت مجوز متن‌باز MIT</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Main JavaScript -->
+  <script src="app.js"></script>
+</body>
+</html>
