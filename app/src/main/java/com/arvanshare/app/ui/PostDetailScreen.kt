@@ -33,6 +33,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
@@ -189,6 +191,18 @@ fun PostDetailScreen(vm: AppViewModel, onBack: () -> Unit) {
                         label = { Text("Add a comment") },
                         modifier = Modifier.weight(1f),
                         maxLines = 3,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences,
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Send
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onSend = {
+                                if (draft.isNotBlank() && !busy) {
+                                    vm.addComment(draft.trim())
+                                    draft = ""
+                                }
+                            }
+                        ),
                         shape = MaterialTheme.shapes.medium,
                     )
                     Button(
