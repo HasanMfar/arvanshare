@@ -16,6 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -190,6 +194,18 @@ fun PostDetailScreen(vm: AppViewModel, onBack: () -> Unit) {
                         modifier = Modifier.weight(1f),
                         maxLines = 3,
                         shape = MaterialTheme.shapes.medium,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            imeAction = ImeAction.Send
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onSend = {
+                                if (draft.isNotBlank() && !busy) {
+                                    vm.addComment(draft.trim())
+                                    draft = ""
+                                }
+                            }
+                        ),
                     )
                     Button(
                         onClick = {
