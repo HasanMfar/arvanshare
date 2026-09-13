@@ -42,6 +42,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
@@ -99,6 +101,9 @@ fun ComposePostScreen(vm: AppViewModel, onDone: () -> Unit) {
                 minLines = 5,
                 shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences
+                ),
             )
 
             // ── Attachment preview ─────────────────────────────────────────

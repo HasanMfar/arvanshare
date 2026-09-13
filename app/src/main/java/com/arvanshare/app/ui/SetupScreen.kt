@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -145,6 +146,21 @@ fun SetupScreen(vm: AppViewModel) {
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    if (valid && !busy) {
+                        vm.saveSettings(
+                            Settings(
+                                name = name.trim(),
+                                endpoint = endpoint.trim(),
+                                bucket = bucket.trim(),
+                                accessKey = accessKey.trim(),
+                                secretKey = secretKey.trim(),
+                            )
+                        )
+                    }
+                }
+            ),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
