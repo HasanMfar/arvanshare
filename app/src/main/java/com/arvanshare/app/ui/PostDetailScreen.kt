@@ -35,6 +35,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Button
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -183,6 +187,12 @@ fun PostDetailScreen(vm: AppViewModel, onBack: () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.Bottom,
                 ) {
+                    val sendComment = {
+                        if (draft.isNotBlank() && !busy) {
+                            vm.addComment(draft.trim())
+                            draft = ""
+                        }
+                    }
                     OutlinedTextField(
                         value = draft,
                         onValueChange = { draft = it },
@@ -190,12 +200,16 @@ fun PostDetailScreen(vm: AppViewModel, onBack: () -> Unit) {
                         modifier = Modifier.weight(1f),
                         maxLines = 3,
                         shape = MaterialTheme.shapes.medium,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            imeAction = ImeAction.Send
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onSend = { sendComment() }
+                        )
                     )
                     Button(
-                        onClick = {
-                            vm.addComment(draft.trim())
-                            draft = ""
-                        },
+                        onClick = sendComment,
                         enabled = draft.isNotBlank() && !busy,
                     ) {
                         Text("Send")
