@@ -51,6 +51,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arvanshare.app.data.Post
@@ -278,7 +281,8 @@ fun PostCard(post: Post, vm: AppViewModel, onClick: () -> Unit) {
                 // Media indicator badge
                 if (post.mediaUrl != null) {
                     val emoji = if (post.mediaType == "image") "🖼️" else "📎"
-                    Text(emoji, style = MaterialTheme.typography.bodyMedium)
+                    val desc = if (post.mediaType == "image") "Image attachment" else "File attachment"
+                    Text(emoji, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.clearAndSetSemantics { contentDescription = desc })
                 }
             }
 

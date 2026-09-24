@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -47,6 +50,7 @@ import com.arvanshare.app.viewmodel.AppViewModel
 fun SetupScreen(vm: AppViewModel) {
     val settings by vm.settings.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     var name by rememberSaveable { mutableStateOf(settings.name) }
     var endpoint by rememberSaveable { mutableStateOf(settings.endpoint) }
@@ -145,6 +149,22 @@ fun SetupScreen(vm: AppViewModel) {
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    keyboardController?.hide()
+                    if (valid && !busy) {
+                        vm.saveSettings(
+                            Settings(
+                                name = name.trim(),
+                                endpoint = endpoint.trim(),
+                                bucket = bucket.trim(),
+                                accessKey = accessKey.trim(),
+                                secretKey = secretKey.trim(),
+                            ),
+                        )
+                    }
+                }
+            ),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
