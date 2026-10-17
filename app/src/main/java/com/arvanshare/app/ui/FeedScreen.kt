@@ -277,7 +277,12 @@ fun PostCard(post: Post, vm: AppViewModel, onClick: () -> Unit) {
                 }
                 // Media indicator badge
                 if (post.mediaUrl != null) {
-                    val emoji = if (post.mediaType == "image") "🖼️" else "📎"
+                    val mime = post.mediaMime ?: ""
+                    val emoji = when {
+                        post.mediaType == "image" || mime.startsWith("image/") -> "🖼️"
+                        post.mediaType == "audio" || mime.startsWith("audio/") -> "🎙️"
+                        else -> "📎"
+                    }
                     Text(emoji, style = MaterialTheme.typography.bodyMedium)
                 }
             }

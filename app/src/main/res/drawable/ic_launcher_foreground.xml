@@ -1,25 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Adaptive icon foreground: "AS" monogram in white on transparent -->
+<!--
+    Adaptive icon foreground: cloud + share-nodes mark (matches assets/logo.svg).
+    Designed for the 108dp adaptive-icon canvas; the mark stays inside the
+    66dp safe circle so no launcher crops it.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- "A" -->
+    <!-- Cloud outline (3 lobes, round joins) -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,22 L38,82 L45,82 L49.5,65 L58.5,65 L63,82 L70,82 Z
-                          M54,34 L57,55 L51,55 Z" />
+        android:pathData="M44,62 C37,62 32,57 32,50 C32,44 36,40 42,38 C43,30 50,24 58,24
+                           C64,24 69,28 71,34 C72,34 73,34 74,34 C80,34 85,39 85,46
+                           C85,53 80,62 72,62 L44,62"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
 
-    <!-- "S" arc top -->
+    <!-- Share connectors -->
+    <path
+        android:pathData="M47,46 L63,39"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.85"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M47,46 L61,54"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.85"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"/>
+
+    <!-- Share nodes: teal origin, white targets -->
+    <path
+        android:fillColor="#4DD0E1"
+        android:pathData="M47,46 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0"/>
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M74,32 C74,26 68,22 62,22 L56,22 L56,30 L62,30
-                          C64,30 66,32 66,34 C66,36 64,38 62,38 L56,38
-                          C50,38 44,43 44,50 C44,57 50,62 56,62 L62,62
-                          C64,62 66,64 66,66 C66,68 64,70 62,70 L56,70 L56,78 L62,78
-                          C68,78 74,74 74,66 C74,59 69,54 62,54 L56,54
-                          C53,54 52,52 52,50 C52,48 53,46 56,46 L62,46
-                          C68,46 74,42 74,34 Z" />
+        android:pathData="M63,39 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M61,53 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0"/>
 </vector>

@@ -5,6 +5,61 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.0.0-beta.3] — 2026-10-17
+
+### Added
+- **🎙 Voice notes on every client** (breaking-free new feature, full Android ↔ Windows parity)
+  - Android: "Record a voice note" in the composer (runtime `RECORD_AUDIO`
+    permission flow), recording indicator with an elapsed timer, and an inline
+    `VoicePlayer` (play/pause + progress + durations) in the feed and post
+    detail. Recorded as compact AAC/M4A via `MediaRecorder`.
+  - Windows: "🎙 Record voice" in the compose dialog, recording via
+    `sounddevice` (no NumPy needed), stored as a 16 kHz mono WAV; WAV voice
+    notes play **inline** through `winsound`, other formats (e.g. M4A from
+    Android) open in the system player.
+  - Both use `media_type="audio"`; old clients still render such posts as a
+    downloadable attachment chip (fully backward compatible).
+- **Inline image previews** in the Windows post-detail dialog (Pillow,
+  graceful no-op when unavailable).
+- CLI/desktop now label audio posts as 🎙 in the feed, and Android shows 🎙️
+  instead of 📎 for voice notes.
+- Display-name sanitization is now shown as a hint during setup on Android.
+
+### Changed
+- **Incremental feed sync** (Android, spec section 6.2): refresh no longer
+  re-downloads *every* post JSON. One keys-only listing diffs the remote feed
+  against the Room cache; only unseen posts are fetched and posts deleted
+  remotely are evicted locally. Likes/comments listings are paginated too
+  (previously silently truncated at 1000 items).
+- Redesigned brand logo (`assets/logo.svg` + `docs/assets/logo.svg`): a cleaner
+  three-lobe cloud outline with a gradient stroke and an integrated
+  share-nodes glyph, plus matching Android launcher icon and setup-screen
+  brand mark.
+- `media_mime` now understands `m4a/aac/ogg/flac` on both platforms.
+
+### Fixed
+- **Windows: display name ("name") was never written to `config.ini`**, so the
+  app forced re-setup after every restart and posting as the wrong/empty name.
+- **Cross-platform key mismatch:** Python sanitized filenames with
+  Unicode-aware `str.isalnum()` while Android used an ASCII-only regex — the
+  same attachment produced *different S3 keys* per platform (violating the
+  shared contract). Both now use the exact same ASCII-only rule for filenames
+  *and* user names (post ids, like markers, comment files).
+- Android: the like-heart spring animation stayed stuck at 1.3× scale after a
+  like; it is now a one-shot pop that always settles back to 1×.
+- Android: a failed comment send used to erase the draft — the text is now
+  only cleared on success.
+- Android: picking a file from a provider with a null input stream produced a
+  zero-byte attachment; that case is rejected now.
+- Android: the media cache grew without bound; it now trims to 128 MB
+  (oldest files first).
+- Windows: avatar colors reshuffled on every app restart (per-process hash
+  salting) — now stable via `zlib.crc32`.
+- Windows: version label in the status bar is now derived from
+  `arvanshare.__version__` instead of a hardcoded string.
+- Windows: attachments with identical filenames overwrote each other in the
+  temp directory — downloads now use unique temp names.
+
 ## [1.0.0-beta.2] — 2026-08-22
 
 ### Changed

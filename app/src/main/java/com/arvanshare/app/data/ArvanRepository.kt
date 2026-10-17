@@ -18,10 +18,9 @@ import kotlinx.serialization.json.Json
  * All reads/writes against the shared bucket. Every call is a blocking AWS SDK
  * call, so all functions run on Dispatchers.IO.
  *
- * After a refresh, posts are upserted into Room; the feed UI reads from Room so
- * reopening the app shows the cached feed instantly, even while offline.
- * TODO(spec 6.2): only fetch posts newer than the newest cached one (by filename
- * timestamp) instead of re-listing/re-downloading everything on every refresh.
+ * Refreshes are incremental (spec 6.2): one cheap keys-only listing diffs the
+ * remote feed against the Room cache, then only unseen post JSONs are
+ * downloaded and posts that vanished remotely are dropped from the cache.
  */
 class ArvanRepository(
     private val context: Context,
@@ -43,31 +42,35 @@ class ArvanRepository(
         }.map { }
     }
 
-    /** Lists post JSONs from the bucket (paged via continuation token) and caches them. */
+    /**
+     * Syncs the feed via a keys-only listing: fetches only post JSONs that are
+     * not cached yet and evicts cached posts whose JSON disappeared remotely.
+     * The returned list comes from Room, sorted newest first.
+     */
     suspend fun refreshFeed(s: Settings): Result<List<Post>> = withContext(Dispatchers.IO) {
         runCatching {
             val client = S3ClientFactory.create(s)
-            val posts = mutableListOf<Post>()
-            var token: String? = null
-            do {
-                val result = client.listObjectsV2(
-                    ListObjectsV2Request().apply {
-                        bucketName = s.bucket
-                        prefix = Keys.POST_PREFIX
-                        maxKeys = 200
-                        continuationToken = token
-                    }
-                )
-                for (summary in result.objectSummaries) {
-                    val key = summary.key ?: continue
-                    if (!Keys.isPostJsonKey(key)) continue
-                    val post = fetchJson<Post>(client, s.bucket, key) ?: continue
-                    posts += post
-                    dao.upsert(PostEntity.from(post))
+            val remoteKeys = listAllKeys(client, s.bucket, Keys.POST_PREFIX)
+            val remoteJsonKeys = remoteKeys.filterTo(mutableSetOf()) { Keys.isPostJsonKey(it) }
+
+            // Posts cached locally but deleted remotely -> drop from Room.
+            val cachedIds = dao.getAllIds().toSet()
+            for (cachedId in cachedIds) {
+                if (Keys.postJsonKey(cachedId) !in remoteJsonKeys) {
+                    dao.deleteById(cachedId)
                 }
-                token = result.nextContinuationToken
-            } while (token != null && result.isTruncated)
-            posts.sortedByDescending { it.timestamp }
+            }
+
+            // Post JSONs never fetched before -> download and cache them.
+            for (key in remoteJsonKeys) {
+                // Derive the id from the key so we only fetch unknown posts.
+                val postId = Keys.postIdFromJsonKey(key)
+                if (postId in cachedIds) continue
+                val post = fetchJson<Post>(client, s.bucket, key) ?: continue
+                dao.upsert(PostEntity.from(post))
+            }
+
+            dao.getAll().map { it.toPost() }
         }
     }
 
@@ -100,7 +103,11 @@ class ArvanRepository(
                     },
                 )
                 mediaUrl = key
-                mediaType = if (mime.startsWith("image/")) "image" else "file"
+                mediaType = when {
+                    mime.startsWith("image/") -> "image"
+                    mime.startsWith("audio/") -> "audio"   // voice notes
+                    else -> "file"
+                }
                 mediaName = name
                 mediaMime = mime
             }
@@ -140,6 +147,10 @@ class ArvanRepository(
         "txt" -> "text/plain"
         "zip" -> "application/zip"
         "mp3" -> "audio/mpeg"
+        "m4a" -> "audio/mp4"
+        "aac" -> "audio/aac"
+        "wav" -> "audio/wav"
+        "ogg" -> "audio/ogg"
         "doc", "docx" -> "application/msword"
         "xls", "xlsx" -> "application/vnd.ms-excel"
         else -> "application/octet-stream"
@@ -165,7 +176,7 @@ class ArvanRepository(
             runCatching {
                 val client = S3ClientFactory.create(s)
                 val folder = Keys.commentsFolder(postId)
-                listKeys(client, s.bucket, folder).mapNotNull { key ->
+                listAllKeys(client, s.bucket, folder).mapNotNull { key ->
                     val basename = key.removePrefix(folder)
                     if (basename.startsWith("like_") && basename.endsWith(".txt")) {
                         basename.removePrefix("like_").removeSuffix(".txt")
@@ -179,7 +190,7 @@ class ArvanRepository(
             runCatching {
                 val client = S3ClientFactory.create(s)
                 val folder = Keys.commentsFolder(postId)
-                listKeys(client, s.bucket, folder).mapNotNull { key ->
+                listAllKeys(client, s.bucket, folder).mapNotNull { key ->
                     val basename = key.removePrefix(folder)
                     if (basename.startsWith("like_") || basename.endsWith(".txt")) null
                     else fetchJson<Comment>(client, s.bucket, key)
@@ -221,8 +232,30 @@ class ArvanRepository(
             obj.objectContent.use { input ->
                 target.outputStream().use { input.copyTo(it) }
             }
+            mediaCache.trim()
             target
         }.getOrNull()
+    }
+
+    /** Keys-only listing with pagination (single calls cap at 1000 items). */
+    private fun listAllKeys(client: AmazonS3Client, bucket: String, prefix: String): List<String> {
+        val keys = mutableListOf<String>()
+        var token: String? = null
+        do {
+            val result = client.listObjectsV2(
+                ListObjectsV2Request().apply {
+                    bucketName = bucket
+                    this.prefix = prefix
+                    maxKeys = 1000
+                    continuationToken = token
+                }
+            )
+            for (summary in result.objectSummaries) {
+                summary.key?.let { keys += it }
+            }
+            token = if (result.isTruncated) result.nextContinuationToken else null
+        } while (token != null)
+        return keys
     }
 
     private inline fun <reified T> fetchJson(client: AmazonS3Client, bucket: String, key: String): T? =
@@ -230,12 +263,4 @@ class ArvanRepository(
             val body = client.getObject(GetObjectRequest(bucket, key)).objectContent
             json.decodeFromString<T>(body.use { it.readBytes().toString(Charsets.UTF_8) })
         }.getOrNull()
-
-    private fun listKeys(client: AmazonS3Client, bucket: String, folder: String): List<String> =
-        client.listObjectsV2(
-            ListObjectsV2Request().apply {
-                bucketName = bucket
-                prefix = folder
-            }
-        ).objectSummaries.mapNotNull { it.key }
 }

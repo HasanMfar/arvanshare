@@ -15,12 +15,16 @@ from arvanshare import (
     build_client,
     bucket_name,
     comments_folder,
+    guess_mime,
     init_structure,
     list_posts,
+    make_post_id,
     post_comments,
     post_json_key,
     post_likes,
     post_media_key,
+    sanitize_filename,
+    sanitize_user,
     toggle_like,
     upload_comment,
     upload_post,
@@ -146,3 +150,62 @@ def test_comment_like_folder_is_per_post(s3, cfg):
     assert post_likes(s3, bucket_name(cfg), p2) == []
     assert post_comments(s3, bucket_name(cfg), p1) == []
     assert len(post_comments(s3, bucket_name(cfg), p2)) == 1
+
+
+# ───────────────────────────────────────────────────────────────────────────── #
+#  Voice notes + key sanitization (must mirror the Android side exactly)
+# ───────────────────────────────────────────────────────────────────────────── #
+
+def test_upload_post_with_voice_wav_is_audio(s3, cfg, tmp_path):
+    voice = tmp_path / "voice_123.wav"
+    voice.write_bytes(b"RIFFfake-wav")
+
+    post_id = upload_post(s3, bucket_name(cfg), "Ali", "Listen!", str(voice))
+
+    post = json.loads(
+        s3.get_object(Bucket="test-bucket", Key=post_json_key(post_id))["Body"].read())
+    assert post["media_type"] == "audio"
+    assert post["media_mime"] == "audio/wav"
+    assert post["media_url"] == post_media_key(post_id, "voice_123.wav")
+
+
+def test_upload_post_with_voice_m4a_is_audio(s3, cfg, tmp_path):
+    voice = tmp_path / "voice_rec.m4a"
+    voice.write_bytes(b"ffffake-m4a")
+
+    post_id = upload_post(s3, bucket_name(cfg), "Ali", "From Android!", str(voice))
+
+    post = json.loads(
+        s3.get_object(Bucket="test-bucket", Key=post_json_key(post_id))["Body"].read())
+    assert post["media_type"] == "audio"
+    assert post["media_mime"] == "audio/mp4"
+
+
+def test_guess_mime_covers_audio_formats():
+    assert guess_mime("note.m4a") == "audio/mp4"
+    assert guess_mime("note.aac") == "audio/aac"
+    assert guess_mime("note.ogg") == "audio/ogg"
+    assert guess_mime("song.mp3") == "audio/mpeg"
+
+
+def test_usernames_are_sanitized_in_keys():
+    assert sanitize_user("Ali Reza") == "Ali_Reza"
+    assert sanitize_user("  ع:=لی ") == "_____"
+    assert sanitize_user("") == "user"
+    assert sanitize_user("Reza") == "Reza"
+
+    post_id = make_post_id("Ali Reza")
+    assert post_id.endswith("_Ali_Reza")
+
+
+def test_filenames_are_sanitized_ascii_only():
+    # MUST match Android's Keys.sanitizeFilename byte-for-byte:
+    assert sanitize_filename("عکس.jpg") == "___.jpg"
+    assert sanitize_filename("my photo (1).png") == "my_photo__1_.png"
+    assert sanitize_filename("report.pdf") == "report.pdf"
+
+
+def test_like_keys_are_sanitized(s3, cfg):
+    post_id = upload_post(s3, bucket_name(cfg), "Ali", "hi", None)
+    toggle_like(s3, bucket_name(cfg), post_id, "Sara M")
+    assert post_likes(s3, bucket_name(cfg), post_id) == ["Sara_M"]

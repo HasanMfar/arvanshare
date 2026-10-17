@@ -1,6 +1,12 @@
 # Runtime dependencies
 boto3>=1.34,<2
 
+# Voice notes (microphone recording) — sounddevice ships PortAudio on Windows
+sounddevice>=0.4.6,<1
+
+# Inline image previews in the post detail dialog
+Pillow>=10.0,<12
+
 # Testing (offline mock S3 — not needed for the portable exe)
 moto[s3]>=5.0,<6
 pytest>=8.0,<9

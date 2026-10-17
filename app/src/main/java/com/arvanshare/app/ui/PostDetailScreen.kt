@@ -1,8 +1,8 @@
 package com.arvanshare.app.ui
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +38,7 @@ import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -193,8 +194,12 @@ fun PostDetailScreen(vm: AppViewModel, onBack: () -> Unit) {
                     )
                     Button(
                         onClick = {
-                            vm.addComment(draft.trim())
-                            draft = ""
+                            val pending = draft.trim()
+                            if (pending.isNotBlank()) {
+                                // The draft is cleared only on success, so a
+                                // failed send never loses the text.
+                                vm.addComment(pending) { ok -> if (ok) draft = "" }
+                            }
                         },
                         enabled = draft.isNotBlank() && !busy,
                     ) {
@@ -214,14 +219,19 @@ private fun LikesRow(
     busy: Boolean,
     onToggle: () -> Unit,
 ) {
-    // Spring-scale animation on the heart icon
-    var animTrigger by remember { mutableStateOf(likedByMe) }
-    val scale by animateFloatAsState(
-        targetValue = if (animTrigger) 1.3f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        finishedListener = { animTrigger = likedByMe },
-        label = "like_scale",
-    )
+    // One-shot spring pulse on every tap: scale pops to 1.3 then settles back
+    // to 1f (the old trigger-based version kept the icon stuck at 1.3x).
+    val scale = remember { Animatable(1f) }
+    var pulseCount by remember { mutableIntStateOf(0) }
+    LaunchedEffect(pulseCount) {
+        if (pulseCount > 0) {
+            scale.snapTo(1.3f)
+            scale.animateTo(
+                1f,
+                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+            )
+        }
+    }
     val iconColor by animateColorAsState(
         targetValue = if (likedByMe) MaterialTheme.colorScheme.error
                       else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -239,7 +249,7 @@ private fun LikesRow(
         ) {
             IconButton(
                 onClick = {
-                    animTrigger = !animTrigger
+                    pulseCount++
                     onToggle()
                 },
                 enabled = !busy,
@@ -248,7 +258,7 @@ private fun LikesRow(
                     imageVector = if (likedByMe) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                     contentDescription = if (likedByMe) "Unlike" else "Like",
                     tint = iconColor,
-                    modifier = Modifier.scale(scale),
+                    modifier = Modifier.scale(scale.value),
                 )
             }
             Text(

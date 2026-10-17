@@ -18,24 +18,35 @@ object Keys {
     fun postMediaKey(postId: String, filename: String): String =
         "$POST_PREFIX${postId}_${sanitizeFilename(filename)}"
 
-    /** Keep filenames S3-key safe (no slashes, no control chars). */
+    /**
+     * Keep filenames S3-key safe (no slashes, no control chars) — ASCII only.
+     * MUST match python/arvanshare.py's sanitize_segment byte-for-byte, so
+     * both platforms derive identical keys for identical input.
+     */
     fun sanitizeFilename(name: String): String {
         val base = name.substringAfterLast('/').substringAfterLast('\\')
         return base.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "file" }
     }
 
+    /** Same rule as [sanitizeFilename] for display names used in keys. */
+    fun sanitizeName(name: String): String =
+        name.trim().replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "user" }
+
     fun commentsFolder(postId: String) = "$COMMENTS_PREFIX$postId/"
 
     /** Like = an empty marker file. Creating/deleting it is an atomic like/unlike. */
-    fun likeKey(postId: String, user: String) = "${commentsFolder(postId)}like_$user.txt"
+    fun likeKey(postId: String, user: String) = "${commentsFolder(postId)}like_${sanitizeName(user)}.txt"
 
     fun commentKey(postId: String, user: String, stamp: String) =
-        "${commentsFolder(postId)}${stamp}_$user.json"
+        "${commentsFolder(postId)}${stamp}_${sanitizeName(user)}.json"
 
     fun isPostJsonKey(key: String) = key.startsWith(POST_PREFIX) && key.endsWith("_post.json")
 
+    fun postIdFromJsonKey(key: String): String =
+        key.removePrefix(POST_PREFIX).removeSuffix("_post.json")
+
     /** Millisecond precision keeps rapid posts by the same user unique. */
-    fun makePostId(user: String): String = "${nowStamp()}_$user"
+    fun makePostId(user: String): String = "${nowStamp()}_${sanitizeName(user)}"
 
     fun nowStamp(): String =
         SimpleDateFormat("yyyyMMdd_HHmmssSSS", Locale.US).format(Date())

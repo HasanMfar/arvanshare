@@ -40,8 +40,8 @@ Clients connect directly to the bucket, utilizing a race-condition-safe file lay
 ## ✨ Features
 
 - 🚀 **100% Serverless:** No Node.js, PHP, or Python backend to manage, patch, or deploy. Just an S3 bucket!
-- 📱 **Cross-Platform Ecosystem:** Comes with a native Android app (Jetpack Compose), a portable Windows desktop app (Python/Tkinter), and an automation CLI.
-- ⚡ **Offline-First & Cached:** The Android app caches feed metadata locally via Room DB for instant loading on launch.
+- 📱 **Cross-Platform Ecosystem:** Comes with a native Android app (Jetpack Compose), a portable Windows desktop app (Python/Tkinter), and an automation CLI — all three clients share the same feature set, including **🎙 voice notes** (recorded as AAC/M4A on Android, WAV on Windows, downloadable & playable everywhere).
+- ⚡ **Offline-First & Cached:** The Android app caches feed metadata locally via Room DB for instant loading on launch, and syncs incrementally — only unseen posts are downloaded on refresh.
 - 🛡️ **Race-Condition Safe:** Like and comment actions use atomic marker files (`like_<username>.txt`), ensuring concurrent writes never corrupt social data.
 - 🔒 **Private & Secure:** Only users with the Bucket API Keys can access or publish content via HMAC-SHA256 direct S3 signed requests.
 - 🌙 **Dark & Light Mode Support:** Modern, polished Material 3 theme with deep indigo and vibrant cyan accents across all clients.

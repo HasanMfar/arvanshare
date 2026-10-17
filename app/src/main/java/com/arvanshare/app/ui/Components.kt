@@ -37,30 +37,35 @@ import java.util.Locale
 
 /**
  * Renders a post's attachment:
+ * - audio (voice notes): inline [VoicePlayer] player
  * - images: downloaded via authenticated S3, shown inline with Coil
  * - anything else: an attachment chip (name + type) with a download/open action
  */
 @Composable
 fun PostMedia(post: Post, vm: AppViewModel, modifier: Modifier = Modifier) {
     val mediaUrl = post.mediaUrl ?: return
-    val isImage = post.mediaType == "image" || (post.mediaMime ?: "").startsWith("image/")
-    if (isImage) {
-        val file by produceState<File?>(null, mediaUrl) {
-            value = vm.mediaFile(post)
+    val mime = post.mediaMime ?: ""
+    val isAudio = post.mediaType == "audio" || mime.startsWith("audio/")
+    val isImage = post.mediaType == "image" || mime.startsWith("image/")
+    when {
+        isAudio -> VoicePlayer(post = post, vm = vm, modifier = modifier)
+        isImage -> {
+            val file by produceState<File?>(null, mediaUrl) {
+                value = vm.mediaFile(post)
+            }
+            if (file != null) {
+                AsyncImage(
+                    model = file,
+                    contentDescription = post.mediaName ?: "Post image",
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .aspectRatio(4f / 3f),
+                    contentScale = ContentScale.Crop,
+                )
+            }
         }
-        if (file != null) {
-            AsyncImage(
-                model = file,
-                contentDescription = post.mediaName ?: "Post image",
-                modifier = modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .aspectRatio(4f / 3f),
-                contentScale = ContentScale.Crop,
-            )
-        }
-    } else {
-        AttachmentChip(post = post, vm = vm, modifier = modifier)
+        else -> AttachmentChip(post = post, vm = vm, modifier = modifier)
     }
 }
 
@@ -135,8 +140,15 @@ fun copyUriToCache(context: Context, uri: Uri): PickedFile? = runCatching {
     val originalName = queryDisplayName(resolver, uri) ?: "file_${System.currentTimeMillis()}"
     val ext = originalName.substringAfterLast('.', "")
     val out = File(context.cacheDir, "picked_${System.currentTimeMillis()}.${ext.ifBlank { "bin" }}")
-    resolver.openInputStream(uri)?.use { input ->
-        out.outputStream().use { input.copyTo(it) }
+    // A null stream means the provider can't actually serve the file — don't
+    // create (and later upload) a zero-byte attachment.
+    val input = resolver.openInputStream(uri) ?: return null
+    input.use { stream ->
+        out.outputStream().use { stream.copyTo(it) }
+    }
+    if (out.length() == 0L) {
+        out.delete()
+        return null
     }
     PickedFile(out, mimeType, originalName)
 }.getOrNull()

@@ -16,4 +16,20 @@ class MediaCache(context: Context) {
     }
 
     fun get(key: String): File? = fileFor(key).takeIf { it.exists() && it.length() > 0L }
+
+    /** Trim the cache to [maxBytes], evicting the oldest files first. */
+    fun trim(maxBytes: Long = DEFAULT_MAX_BYTES) {
+        val files = dir.listFiles()?.filter { it.isFile } ?: return
+        var total = files.sumOf { it.length() }
+        if (total <= maxBytes) return
+        for (file in files.sortedBy { it.lastModified() }) {
+            if (total <= maxBytes) return
+            val size = file.length()
+            if (file.delete()) total -= size
+        }
+    }
+
+    private companion object {
+        const val DEFAULT_MAX_BYTES = 128L * 1024 * 1024 // 128 MB
+    }
 }

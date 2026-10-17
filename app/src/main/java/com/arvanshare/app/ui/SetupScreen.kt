@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -32,6 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -40,6 +43,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arvanshare.app.R
+import com.arvanshare.app.data.Keys
 import com.arvanshare.app.data.Settings
 import com.arvanshare.app.viewmodel.AppViewModel
 
@@ -71,19 +76,26 @@ fun SetupScreen(vm: AppViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // App icon placeholder — colored circle with "AS"
+            // Brand mark — cloud + share-nodes (matches assets/logo.svg)
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(72.dp)
+                    .size(84.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                androidx.compose.ui.graphics.Color(0xFF3949AB),
+                                androidx.compose.ui.graphics.Color(0xFF12131A),
+                            ),
+                        ),
+                    ),
             ) {
-                Text(
-                    "AS",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
+                Icon(
+                    painter = painterResource(R.drawable.ic_launcher_foreground),
+                    contentDescription = "ArvanShare logo",
+                    modifier = Modifier.size(64.dp),
+                    tint = androidx.compose.ui.graphics.Color.Unspecified,
                 )
             }
             Text(
@@ -109,6 +121,12 @@ fun SetupScreen(vm: AppViewModel) {
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
+            supportingText = {
+                val handle = Keys.sanitizeName(name)
+                if (handle.isNotBlank() && handle != name.trim()) {
+                    Text("Will appear as \"$handle\" (letters, digits and . _ - only)")
+                }
+            },
         )
         OutlinedTextField(
             value = endpoint,

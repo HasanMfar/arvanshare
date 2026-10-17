@@ -126,13 +126,17 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun addComment(text: String) {
-        val current = _detail.value ?: return
+    /** onDone gets true when the comment was actually posted to S3. */
+    fun addComment(text: String, onDone: (Boolean) -> Unit = {}) {
+        val current = _detail.value ?: run { onDone(false); return }
         viewModelScope.launch {
             _busy.value = true
             repo.addComment(settings.value, current.post.postId, text)
-                .onSuccess { loadDetail(current.post) }
-                .onFailure { _snackbar.value = it.message ?: "Failed to post comment" }
+                .onSuccess { loadDetail(current.post); onDone(true) }
+                .onFailure {
+                    _snackbar.value = it.message ?: "Failed to post comment"
+                    onDone(false)
+                }
             _busy.value = false
         }
     }

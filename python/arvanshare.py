@@ -26,12 +26,15 @@ import argparse
 import configparser
 import json
 import os
+import re
 import sys
 import time
 from datetime import datetime
 
 import boto3
 from botocore.exceptions import ClientError
+
+__version__ = "1.0.0-beta.3"
 
 POST_PREFIX = "posts/"
 COMMENTS_PREFIX = "comments/"
@@ -83,8 +86,25 @@ def now_str() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S%f")
 
 
+# Keep names/keys S3-safe and identical on every platform. MUST be
+# character-for-character the same rule as Android's Keys.sanitizeFilename /
+# Keys.sanitizeName: ASCII letters, digits, dot, underscore, dash only.
+_SAFE_RE = re.compile(r"[^A-Za-z0-9._-]")
+
+
+def sanitize_segment(value: str, fallback: str) -> str:
+    """Santize a filename/username segment so it is a safe S3 key fragment.
+
+    Non-ASCII characters (e.g. Persian filenames) are replaced with '_' — the
+    Android app applies the identical regex, so both platforms always derive
+    the same key for the same input.
+    """
+    base = _SAFE_RE.sub("_", value.strip())
+    return base or fallback
+
+
 def make_post_id(user: str) -> str:
-    return f"{now_str()}_{user}"
+    return f"{now_str()}_{sanitize_user(user)}"
 
 
 def post_json_key(post_id: str) -> str:
@@ -96,9 +116,15 @@ def post_media_key(post_id: str, filename: str) -> str:
 
     Kept in sync with the Android app's Keys.postMediaKey - same sanitization.
     """
-    safe = "".join(c if (c.isalnum() or c in "._-") else "_" for c in filename)
-    safe = safe or "file"
-    return f"{POST_PREFIX}{post_id}_{safe}"
+    return f"{POST_PREFIX}{post_id}_{sanitize_filename(filename)}"
+
+
+def sanitize_filename(filename: str) -> str:
+    return sanitize_segment(os.path.basename(filename.replace("\\", "/")), "file")
+
+
+def sanitize_user(user: str) -> str:
+    return sanitize_segment(user, "user")
 
 
 def comments_folder(post_id: str) -> str:
@@ -106,11 +132,11 @@ def comments_folder(post_id: str) -> str:
 
 
 def like_key(post_id: str, user: str) -> str:
-    return f"{comments_folder(post_id)}like_{user}.txt"
+    return f"{comments_folder(post_id)}like_{sanitize_user(user)}.txt"
 
 
 def comment_key(post_id: str, user: str) -> str:
-    return f"{comments_folder(post_id)}{now_str()}_{user}.json"
+    return f"{comments_folder(post_id)}{now_str()}_{sanitize_user(user)}.json"
 
 
 # --------------------------------------------------------------------------- #
@@ -155,7 +181,7 @@ def upload_post(client, bucket: str, user: str, text: str, media_path: str | Non
         key = post_media_key(post_id, media_name)
         client.upload_file(media_path, bucket, key, ExtraArgs={"ContentType": media_mime})
         media_url = key
-        media_type = "image" if media_mime.startswith("image/") else "file"
+        media_type = media_kind(media_mime)
 
     post = {
         "post_id": post_id,
@@ -180,6 +206,15 @@ def upload_post(client, bucket: str, user: str, text: str, media_path: str | Non
     return post_id
 
 
+def media_kind(mime: str) -> str:
+    """Render kind for a MIME type: image | audio | file (keep in sync with Android)."""
+    if mime.startswith("image/"):
+        return "image"
+    if mime.startswith("audio/"):
+        return "audio"
+    return "file"
+
+
 def guess_mime(name: str) -> str:
     """Best-effort MIME guess from the file extension (kept in sync with Android)."""
     ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
@@ -188,6 +223,8 @@ def guess_mime(name: str) -> str:
         "gif": "image/gif", "webp": "image/webp",
         "mp4": "video/mp4", "mov": "video/quicktime",
         "mp3": "audio/mpeg", "wav": "audio/wav",
+        "m4a": "audio/mp4", "aac": "audio/aac", "ogg": "audio/ogg", "oga": "audio/ogg",
+        "flac": "audio/flac",
         "pdf": "application/pdf",
         "txt": "text/plain", "md": "text/markdown", "csv": "text/csv",
         "zip": "application/zip", "gz": "application/gzip",

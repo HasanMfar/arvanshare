@@ -11,13 +11,16 @@ Run:  python desktop.py          (from .venv or system Python with boto3)
 import configparser
 import os
 import queue
+import sys
 import tempfile
 import threading
+import time
 import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog, messagebox, ttk
 
 from arvanshare import (
+    __version__,
     build_client,
     bucket_name,
     init_structure,
@@ -29,7 +32,32 @@ from arvanshare import (
     upload_post,
 )
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+# Optional extras — the app degrades gracefully if they are missing.
+try:
+    from PIL import Image, ImageTk
+except ImportError:  # image previews disabled
+    Image = ImageTk = None
+
+try:
+    import sounddevice as _sd
+except ImportError:  # voice recording disabled
+    _sd = None
+
+import wave
+import zlib
+
+try:
+    import winsound
+except ImportError:  # non-Windows fallback: external player only
+    winsound = None
+
+# The portable EXE (PyInstaller onefile) unpacks to a temp dir where __file__
+# lives — a config written there would vanish on exit. When frozen, resolve
+# "next to the exe" via sys.executable; in normal Python runs use this file's dir.
+if getattr(sys, "frozen", False):
+    HERE = os.path.dirname(os.path.abspath(sys.executable))
+else:
+    HERE = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(HERE, "config.ini")
 
 # ───────────────────────────────────────────────────────────────────────────── #
@@ -143,8 +171,10 @@ def fmt_time(ts: int) -> str:
 
 
 def avatar_color(name: str) -> str:
+    # zlib.crc32 is stable across processes/machines (unlike builtin hash(),
+    # which is salted per-run — colours used to shuffle on every restart).
     colors = THEME["avatars"]
-    return colors[abs(hash(name)) % len(colors)]
+    return colors[zlib.crc32(name.encode("utf-8")) % len(colors)]
 
 
 def avatar_initial(name: str) -> str:
@@ -163,11 +193,14 @@ def run_async(widget, fn, on_done) -> None:
 
     def poll():
         try:
-            kind, payload = q.get_nowait()
-        except queue.Empty:
-            widget.after(100, poll)
-            return
-        on_done(kind, payload)
+            try:
+                kind, payload = q.get_nowait()
+            except queue.Empty:
+                widget.after(100, poll)
+                return
+            on_done(kind, payload)
+        except tk.TclError:
+            pass  # widget destroyed while the worker was running
 
     threading.Thread(target=worker, daemon=True).start()
     widget.after(100, poll)
@@ -184,6 +217,10 @@ def load_config_dict() -> dict:
 def save_config_dict(values: dict) -> None:
     cfg = configparser.ConfigParser()
     cfg["arvan"] = {
+        # "name" must be saved too — it is part of the identity used for
+        # post ids and like markers (bugfix: it used to be dropped here,
+        # forcing re-setup after every restart).
+        "name":       values.get("name", ""),
         "endpoint":   values.get("endpoint", ""),
         "region":     values.get("region", "ir-thr-at1"),
         "bucket":     values.get("bucket", ""),
@@ -192,12 +229,6 @@ def save_config_dict(values: dict) -> None:
     }
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         cfg.write(f)
-
-
-def client_from(values: dict):
-    cfg = configparser.ConfigParser()
-    cfg["arvan"] = values
-    return build_client(cfg), values.get("bucket", ""), values.get("name", "")
 
 
 # ───────────────────────────────────────────────────────────────────────────── #
@@ -243,6 +274,75 @@ class Spinner(tk.Label):
         self._frame = (self._frame + 1) % len(SPINNER_FRAMES)
         self.config(text=SPINNER_FRAMES[self._frame])
         self._job = self.after(80, self._tick)
+
+
+# ───────────────────────────────────────────────────────────────────────────── #
+#  Voice recorder (microphone → WAV)
+# ───────────────────────────────────────────────────────────────────────────── #
+
+class VoiceRecorder:
+    """Microphone recorder built on sounddevice's RawInputStream (no numpy).
+
+    Produces 16 kHz mono 16-bit PCM WAV — compact enough for voice notes,
+    and playable inline on Windows via winsound. The Android app records
+    AAC/M4A; both render as `media_type="audio"` and are interchangeable.
+    """
+
+    SAMPLE_RATE = 16000
+    CHANNELS = 1
+
+    def __init__(self):
+        self._stream = None
+        self._buf = bytearray()
+        self._path = None
+        self._t0 = None
+
+    @property
+    def available(self) -> bool:
+        return _sd is not None
+
+    @property
+    def recording(self) -> bool:
+        return self._stream is not None
+
+    def start(self, path: str) -> None:
+        if self._stream is not None:
+            raise RuntimeError("Already recording")
+        self._buf = bytearray()
+        self._path = path
+        self._t0 = time.monotonic()
+        self._stream = _sd.RawInputStream(
+            samplerate=self.SAMPLE_RATE, channels=self.CHANNELS, dtype="int16",
+            callback=lambda data, frames, t, status: self._buf.extend(data),
+        )
+        self._stream.start()
+
+    def elapsed(self) -> float:
+        return 0.0 if self._t0 is None else time.monotonic() - self._t0
+
+    def stop(self) -> str:
+        """Stop and write the collected PCM frames as a WAV file."""
+        stream, self._stream, self._t0 = self._stream, None, None
+        try:
+            stream.stop()
+            stream.close()
+        finally:
+            with wave.open(self._path, "wb") as w:
+                w.setnchannels(self.CHANNELS)
+                w.setsampwidth(2)
+                w.setframerate(self.SAMPLE_RATE)
+                w.writeframes(bytes(self._buf))
+        return self._path
+
+    def cancel(self) -> None:
+        """Stop without writing anything (used when the dialog is closed)."""
+        stream, self._stream, self._t0 = self._stream, None, None
+        if stream is not None:
+            try:
+                stream.stop()
+                stream.close()
+            except Exception:  # noqa: BLE001 - best effort on shutdown
+                pass
 
 
 # ───────────────────────────────────────────────────────────────────────────── #
@@ -415,6 +515,8 @@ class ComposeDialog(tk.Toplevel):
         self.values   = values
         self.on_posted = on_posted
         self._file_path = None
+        self._recorder = VoiceRecorder()
+        self._rec_job  = None
 
         # ── Header ──────────────────────────────────────────────────────────
         hdr = tk.Frame(self, bg=THEME["surface2"], padx=16, pady=10)
@@ -452,11 +554,20 @@ class ComposeDialog(tk.Toplevel):
         btns.pack(fill="x")
         tk.Button(btns, text="Attach file…", command=self._pick_file,
                   **self._btn_style()).pack(side="left", padx=(0, 6))
+        self._rec_btn = tk.Button(btns, text="🎙  Record voice",
+                                  command=self._toggle_recording,
+                                  **self._btn_style())
+        self._rec_btn.pack(side="left")
         self._pub_btn = tk.Button(btns, text="Publish →", command=self._publish,
                                   **self._btn_style(accent=True))
-        self._pub_btn.pack(side="left")
-        tk.Button(btns, text="Cancel", command=self.destroy,
-                  **self._btn_style()).pack(side="right")
+        self._pub_btn.pack(side="right")
+        tk.Button(btns, text="Cancel", command=self._on_close,
+                  **self._btn_style()).pack(side="right", padx=(0, 6))
+
+        if not self._recorder.available:
+            self._rec_btn.config(state="disabled",
+                                 text="🎙  Voice needs sounddevice")
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _btn_style(self, accent=False) -> dict:
         return dict(
@@ -467,6 +578,72 @@ class ComposeDialog(tk.Toplevel):
             relief="flat", padx=14, pady=6,
             font=THEME["font_body"], cursor="hand2",
         )
+
+    # ── Voice recording ──────────────────────────────────────────────────
+
+    def _toggle_recording(self):
+        if self._recorder.recording:
+            self._stop_recording()
+        else:
+            self._start_recording()
+
+    def _start_recording(self):
+        if self._file_path is not None:
+            messagebox.showwarning("Attachment pending",
+                                   "Remove the current attachment first.",
+                                   parent=self)
+            return
+        path = os.path.join(tempfile.gettempdir(),
+                            f"arvanshare_voice_{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav")
+        try:
+            self._recorder.start(path)
+        except Exception as exc:  # noqa: BLE001 - mic missing / busy
+            messagebox.showerror("Recording failed", str(exc), parent=self)
+            return
+        self._rec_btn.config(text="⏹  Stop recording", bg=THEME["error"],
+                             fg="#ffffff", activebackground="#B71C1C")
+        self._file_lbl.config(text="🎙  Recording… 0:00", fg=THEME["error"])
+        self._pub_btn.config(state="disabled")
+        self._tick_recording()
+
+    def _tick_recording(self):
+        if not self._recorder.recording:
+            return
+        secs = int(self._recorder.elapsed())
+        self._file_lbl.config(text=f"🎙  Recording… {secs // 60}:{secs % 60:02d}")
+        self._rec_job = self.after(200, self._tick_recording)
+
+    def _stop_recording(self):
+        if self._rec_job:
+            self.after_cancel(self._rec_job)
+            self._rec_job = None
+        secs = int(self._recorder.elapsed())
+        try:
+            path = self._recorder.stop()
+        except Exception as exc:  # noqa: BLE001
+            messagebox.showerror("Recording failed", str(exc), parent=self)
+            self._reset_recording_ui()
+            return
+        self._file_path = path
+        self._file_lbl.config(
+            text=f"🎙  Voice note ({secs // 60}:{secs % 60:02d}) — voice_….wav",
+            fg=THEME["fg"])
+        self._rec_btn.config(text="🎙  Record voice", bg=THEME["surface2"],
+                             fg=THEME["fg"], activebackground=THEME["primary"])
+        self._pub_btn.config(state="normal")
+
+    def _reset_recording_ui(self):
+        self._rec_btn.config(text="🎙  Record voice", bg=THEME["surface2"],
+                             fg=THEME["fg"], activebackground=THEME["primary"])
+        self._file_lbl.config(text="📎  No file attached", fg=THEME["fg3"])
+        self._pub_btn.config(state="normal")
+
+    def _on_close(self):
+        if self._recorder.recording:
+            self._recorder.cancel()
+        if self._rec_job:
+            self.after_cancel(self._rec_job)
+        self.destroy()
 
     def _on_text_focus_in(self, _e):
         if self._text.get("1.0", "end-1c") == self._placeholder:
@@ -529,11 +706,22 @@ class DetailDialog(tk.Toplevel):
         self.post       = post
         self.on_changed = on_changed
         self._me        = values.get("name", "")
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
 
         self._build_ui(author)
         self.load()
 
+    def _on_close(self):
+        self._stop_playback()
+        self.destroy()
+
     def _build_ui(self, author: str):
+        self._is_audio = False
+        self._voice_path = None
+        self._play_btn = None
+        self._play_btn_enabled = False
+        self._photo = None  # keep a reference so Tk doesn't GC the image
+
         # ── Post header ──────────────────────────────────────────────────────
         hdr = tk.Frame(self, bg=THEME["surface2"], padx=16, pady=12)
         hdr.pack(fill="x")
@@ -566,14 +754,42 @@ class DetailDialog(tk.Toplevel):
         # Media button
         if self.post.get("media_url"):
             media_name = self.post.get("media_name") or "attachment"
-            media_type = self.post.get("media_type", "file")
-            icon = "🖼" if media_type == "image" else "📎"
-            tk.Button(body_frame, text=f"{icon}  Open {media_name}",
-                      command=self._open_media,
-                      bg=THEME["surface2"], fg=THEME["primary"],
-                      activebackground=THEME["bg"], relief="flat",
-                      font=THEME["font_small"], cursor="hand2",
-                      padx=10, pady=4).pack(anchor="w", pady=(6, 0))
+            media_kind = self.post.get("media_type", "file")
+            media_mime = self.post.get("media_mime") or ""
+            is_audio = media_kind == "audio" or media_mime.startswith("audio/")
+            icon = "🎙" if is_audio else ("🖼" if media_kind == "image" else "📎")
+            self._is_audio = is_audio
+            media_row = tk.Frame(body_frame, bg=THEME["bg"])
+            media_row.pack(anchor="w", pady=(6, 0))
+            self._media_btn = tk.Button(
+                media_row, text=f"{icon}  Open {media_name}",
+                command=self._open_media,
+                bg=THEME["surface2"], fg=THEME["primary"],
+                activebackground=THEME["bg"], relief="flat",
+                font=THEME["font_small"], cursor="hand2",
+                padx=10, pady=4)
+            if is_audio and winsound is not None and \
+                    (media_mime == "audio/wav" or (media_name or "").lower().endswith(".wav")):
+                # Inline playback for WAV voice notes; other formats open in
+                # the system player.
+                self._media_btn.config(text="🎙  Download voice note")
+                self._media_btn.pack(side="left", padx=(0, 6))
+                self._play_btn = tk.Button(
+                    media_row, text="▶", command=self._toggle_playback,
+                    bg=THEME["surface2"], fg=THEME["success"],
+                    activebackground=THEME["bg"], relief="flat",
+                    font=THEME["font_small"], cursor="hand2",
+                    padx=10, pady=4, state="disabled")
+                self._play_btn.pack(side="left")
+                self._play_btn_enabled = False
+            else:
+                self._media_btn.pack(anchor="w")
+
+            # Inline image preview (requires Pillow; skipped gracefully)
+            if Image is not None and media_kind == "image" and not is_audio:
+                self._img_frame = tk.Frame(body_frame, bg=THEME["bg"])
+                self._img_frame.pack(anchor="w", pady=(8, 0))
+                self._load_image_preview()
 
         # ── Divider ──────────────────────────────────────────────────────────
         tk.Frame(self, bg=THEME["border"], height=1).pack(fill="x", padx=16)
@@ -716,23 +932,88 @@ class DetailDialog(tk.Toplevel):
 
         run_async(self, work, done)
 
+    def _download_media(self) -> str:
+        """Download the post's media to a uniquely-named temp file."""
+        cfg = configparser.ConfigParser()
+        cfg["arvan"] = self.values
+        client = build_client(cfg)
+        name = os.path.basename(self.post.get("media_url") or "attachment")
+        fd, tmp = tempfile.mkstemp(
+            suffix="-" + name.replace(" ", "_"), prefix="arvanshare_")
+        os.close(fd)
+        obj = client.get_object(Bucket=self.values["bucket"],
+                                Key=self.post["media_url"])
+        with open(tmp, "wb") as f:
+            f.write(obj["Body"].read())
+        return tmp
+
     def _open_media(self):
         def work():
-            cfg = configparser.ConfigParser()
-            cfg["arvan"] = self.values
-            client = build_client(cfg)
-            obj = client.get_object(Bucket=self.values["bucket"], Key=self.post["media_url"])
-            tmp = os.path.join(tempfile.gettempdir(),
-                               os.path.basename(self.post["media_url"]))
-            with open(tmp, "wb") as f:
-                f.write(obj["Body"].read())
-            return tmp
+            return self._download_media()
 
         def done(kind, payload):
             if kind == "ok":
+                if self._is_audio:
+                    self._voice_path = payload
+                    if self._play_btn is not None and not self._play_btn_enabled:
+                        # WAV voice note: enable inline playback instead of
+                        # opening an external player.
+                        self._play_btn_enabled = True
+                        self._play_btn.config(state="normal")
+                        self._media_btn.config(text="🎙  Voice note", state="disabled")
+                        self._toggle_playback()
+                        return
                 os.startfile(payload)
             else:
                 messagebox.showerror("Download failed", str(payload), parent=self)
+
+        run_async(self, work, done)
+
+    # ── Voice playback (inline WAV) ───────────────────────────────────────
+
+    def _toggle_playback(self):
+        if winsound is None:
+            return
+        if self._play_btn["text"] == "▶":
+            if self._voice_path is None:
+                self._media_btn.invoke()  # download first, then re-click
+                return
+            winsound.PlaySound(self._voice_path,
+                               winsound.SND_FILENAME | winsound.SND_ASYNC)
+            self._play_btn.config(text="⏹", fg=THEME["error"])
+        else:
+            self._stop_playback()
+
+    def _stop_playback(self):
+        if winsound is not None:
+            winsound.PlaySound(None, winsound.SND_PURGE)
+        if getattr(self, "_play_btn", None) is not None:
+            self._play_btn.config(text="▶", fg=THEME["success"])
+
+    # ── Inline image preview ──────────────────────────────────────────────
+
+    def _load_image_preview(self):
+        def work():
+            return self._download_media()
+
+        def done(kind, payload):
+            if kind != "ok" or Image is None or ImageTk is None:
+                return
+            try:
+                with Image.open(payload) as im:
+                    im = im.convert("RGB")
+                    width = 440
+                    ratio = width / im.width
+                    im = im.resize((width, max(1, int(im.height * ratio))))
+                    self._photo = ImageTk.PhotoImage(im)
+                tk.Label(self._img_frame, image=self._photo, bg=THEME["bg"],
+                         bd=0).pack()
+                try:
+                    os.remove(payload)
+                except OSError:
+                    pass
+            except Exception:  # noqa: BLE001 - preview is best-effort
+                pass
 
         run_async(self, work, done)
 
@@ -825,7 +1106,7 @@ class ArvanDesktopApp:
                                     font=THEME["font_small"], anchor="w")
         self._status_lbl.pack(side="left", fill="x", expand=True)
 
-        tk.Label(status_bar, text="v1.0.0-beta.1",
+        tk.Label(status_bar, text=f"v{__version__}",
                  bg=THEME["surface2"], fg=THEME["fg3"],
                  font=THEME["font_tiny"]).pack(side="right")
 
@@ -897,7 +1178,14 @@ class ArvanDesktopApp:
             raw     = (p.get("text") or "").replace("\n", " ")
             preview = (raw[:72] + "…" if len(raw) > 72 else raw)
             if p.get("media_url"):
-                icon = "🖼" if p.get("media_type") == "image" else "📎"
+                mime = p.get("media_mime") or ""
+                kind = p.get("media_type", "file")
+                if kind == "image" or mime.startswith("image/"):
+                    icon = "🖼"
+                elif kind == "audio" or mime.startswith("audio/"):
+                    icon = "🎙"
+                else:
+                    icon = "📎"
                 preview = f"{icon}  {preview}" if preview else icon
             iid = self._tree.insert("", "end",
                                     values=(author, ts, preview),
