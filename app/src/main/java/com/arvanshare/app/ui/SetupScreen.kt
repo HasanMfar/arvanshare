@@ -76,7 +76,7 @@ fun SetupScreen(vm: AppViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Brand mark — cloud + share-nodes (matches assets/logo.svg)
+            // Brand mark — speech bubble + share-nodes (matches assets/logo.svg)
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -85,7 +85,7 @@ fun SetupScreen(vm: AppViewModel) {
                     .background(
                         Brush.linearGradient(
                             listOf(
-                                androidx.compose.ui.graphics.Color(0xFF3949AB),
+                                androidx.compose.ui.graphics.Color(0xFF2A2E55),
                                 androidx.compose.ui.graphics.Color(0xFF12131A),
                             ),
                         ),

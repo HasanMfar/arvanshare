@@ -1,59 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#262A4A"/>
+      <stop offset="0%" stop-color="#2A2E55"/>
       <stop offset="100%" stop-color="#12131A"/>
     </linearGradient>
-    <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4DD0E1"/>
-      <stop offset="55%" stop-color="#5C6BC0"/>
-      <stop offset="100%" stop-color="#3949AB"/>
-    </linearGradient>
-    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4DD0E1"/>
-      <stop offset="100%" stop-color="#00BCD4"/>
-    </linearGradient>
-    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="bubbleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#5C6BC0"/>
-      <stop offset="100%" stop-color="#1A237E"/>
+      <stop offset="52%" stop-color="#3F51B5"/>
+      <stop offset="100%" stop-color="#00ACC1"/>
     </linearGradient>
-    <radialGradient id="glowGrad" cx="50%" cy="42%" r="55%">
-      <stop offset="0%" stop-color="#5C6BC0" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#5C6BC0" stop-opacity="0"/>
-    </radialGradient>
+    <filter id="bubbleShadow" x="-25%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
   </defs>
 
-  <!-- Rounded-square background with subtle border -->
+  <!-- Rounded-square badge -->
   <rect width="512" height="512" rx="120" fill="url(#bgGrad)"/>
-  <rect x="6" y="6" width="500" height="500" rx="114" fill="none"
-        stroke="url(#borderGrad)" stroke-width="4" stroke-opacity="0.45"/>
+  <rect x="5" y="5" width="502" height="502" rx="115" fill="none"
+        stroke="#5C6BC0" stroke-opacity="0.35" stroke-width="3"/>
 
-  <!-- Soft central glow for depth -->
-  <circle cx="256" cy="212" r="205" fill="url(#glowGrad)"/>
-
-  <!-- Cloud: one clean 3-lobe outline, gradient stroke -->
-  <path d="M209 294
-           C175 294 152 270 152 237
-           C152 209 171 190 199 180
-           C204 142 237 114 275 114
-           C303 114 327 133 337 161
-           C341 161 346 161 351 161
-           C379 161 403 185 403 218
-           C403 251 379 294 341 294
-           L209 294"
-        fill="none" stroke="url(#cloudGrad)" stroke-width="24"
-        stroke-linecap="round" stroke-linejoin="round"/>
-
-  <!-- Share glyph inside the cloud: two connectors, then the three nodes -->
-  <g stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="13" stroke-linecap="round">
-    <line x1="232" y1="225" x2="322" y2="178"/>
-    <line x1="232" y1="225" x2="316" y2="252"/>
+  <!-- Speech bubble: one bold shape, gradient fill ending in brand teal -->
+  <g filter="url(#bubbleShadow)">
+    <path d="M180 96 H332 C378 96 416 134 416 180 V260 C416 306 378 344 332 344
+             H272 L188 430 C180 438 168 432 170 421 L178 344
+             H180 C134 344 96 306 96 260 V180 C96 134 134 96 180 96 Z"
+          fill="url(#bubbleGrad)"/>
   </g>
-  <circle cx="232" cy="225" r="27" fill="url(#accentGrad)"/>
-  <circle cx="322" cy="178" r="23" fill="#FFFFFF"/>
-  <circle cx="316" cy="252" r="23" fill="#FFFFFF"/>
 
-  <!-- Satellite dots: the network feeling -->
-  <circle cx="118" cy="150" r="9" fill="url(#accentGrad)" opacity="0.9"/>
-  <circle cx="418" cy="130" r="7" fill="#9FA8DA" opacity="0.9"/>
+  <!-- Share-network glyph: two connectors, three nodes -->
+  <g stroke="#FFFFFF" stroke-width="15" stroke-linecap="round" stroke-opacity="0.92">
+    <line x1="198" y1="238" x2="312" y2="178"/>
+    <line x1="198" y1="238" x2="312" y2="298"/>
+  </g>
+  <circle cx="198" cy="238" r="30" fill="#FFFFFF"/>
+  <circle cx="312" cy="178" r="26" fill="#FFFFFF"/>
+  <circle cx="312" cy="298" r="26" fill="#FFFFFF"/>
 </svg>

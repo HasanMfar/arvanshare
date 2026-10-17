@@ -31,10 +31,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   against the Room cache; only unseen posts are fetched and posts deleted
   remotely are evicted locally. Likes/comments listings are paginated too
   (previously silently truncated at 1000 items).
-- Redesigned brand logo (`assets/logo.svg` + `docs/assets/logo.svg`): a cleaner
-  three-lobe cloud outline with a gradient stroke and an integrated
-  share-nodes glyph, plus matching Android launcher icon and setup-screen
-  brand mark.
+- New brand logo (`assets/logo.svg` + `docs/assets/logo.svg`): a bold gradient
+  speech bubble (indigo → brand teal) carrying the white share-nodes glyph,
+  plus a matching Android launcher icon (adaptive foreground + themed
+  monochrome layers on a dark navy tile) and setup-screen brand mark.
 - `media_mime` now understands `m4a/aac/ogg/flac` on both platforms.
 
 ### Fixed

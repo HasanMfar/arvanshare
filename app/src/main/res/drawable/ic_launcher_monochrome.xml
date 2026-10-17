@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Themed-icon (monochrome) layer for the adaptive launcher icon. Only the
+    alpha channel matters, the system tints it. The bubble is drawn as a
+    rounded outline (thicker stroke) instead of a solid fill so the share
+    glyph stays readable inside it at small sizes.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Bubble outline -->
+    <path
+        android:pathData="M39.94,22.365 H68.06 C76.57,22.365 83.6,29.395 83.6,37.905 V52.705 C83.6,61.215 76.57,68.245 68.06,68.245 H56.96 L41.42,84.155 C39.94,85.635 37.72,84.525 38.09,82.49 L39.57,68.245 H39.94 C31.43,68.245 24.4,61.215 24.4,52.705 V37.905 C24.4,29.395 31.43,22.365 39.94,22.365 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.81"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Share connectors -->
+    <path
+        android:pathData="M43.27,48.635 L64.36,37.535"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.7"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M43.27,48.635 L64.36,59.735"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.7"
+        android:strokeLineCap="round" />
+
+    <!-- Share nodes -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M43.27,48.635 m-5.55,0 a5.55,5.55 0 1,1 11.1,0 a5.55,5.55 0 1,1 -11.1,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M64.36,37.535 m-4.81,0 a4.81,4.81 0 1,1 9.62,0 a4.81,4.81 0 1,1 -9.62,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M64.36,59.735 m-4.81,0 a4.81,4.81 0 1,1 9.62,0 a4.81,4.81 0 1,1 -9.62,0" />
+</vector>

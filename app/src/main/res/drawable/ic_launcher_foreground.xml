@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Adaptive icon foreground: cloud + share-nodes mark (matches assets/logo.svg).
-    Designed for the 108dp adaptive-icon canvas; the mark stays inside the
-    66dp safe circle so no launcher crops it.
+    Adaptive icon foreground: gradient speech bubble + share-nodes glyph
+    (matches assets/logo.svg and docs/assets/logo.svg).
+
+    The artwork is the logo's 512x512 mark scaled by 0.185 and centred on the
+    108dp adaptive canvas, with the coordinates baked in (no <group> transform)
+    so it renders identically on every API level. The mark spans 24.4..83.6 in
+    both axes, keeping it inside the 66dp safe zone of the launcher mask.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
@@ -11,38 +15,45 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Cloud outline (3 lobes, round joins) -->
+    <!-- Speech bubble (chat) -->
     <path
-        android:pathData="M44,62 C37,62 32,57 32,50 C32,44 36,40 42,38 C43,30 50,24 58,24
-                           C64,24 69,28 71,34 C72,34 73,34 74,34 C80,34 85,39 85,46
-                           C85,53 80,62 72,62 L44,62"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="4.5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"/>
+        android:pathData="M39.94,22.365 H68.06 C76.57,22.365 83.6,29.395 83.6,37.905 V52.705 C83.6,61.215 76.57,68.245 68.06,68.245 H56.96 L41.42,84.155 C39.94,85.635 37.72,84.525 38.09,82.49 L39.57,68.245 H39.94 C31.43,68.245 24.4,61.215 24.4,52.705 V37.905 C24.4,29.395 31.43,22.365 39.94,22.365 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="24.4"
+                android:startY="22.365"
+                android:endX="83.6"
+                android:endY="85.635"
+                android:startColor="#5C6BC0"
+                android:centerColor="#3F51B5"
+                android:centerX="0.52"
+                android:endColor="#00ACC1" />
+        </aapt:attr>
+    </path>
 
     <!-- Share connectors -->
     <path
-        android:pathData="M47,46 L63,39"
+        android:pathData="M43.27,48.635 L64.36,37.535"
         android:strokeColor="#FFFFFF"
-        android:strokeAlpha="0.85"
-        android:strokeWidth="3"
-        android:strokeLineCap="round"/>
+        android:strokeAlpha="0.92"
+        android:strokeWidth="2.775"
+        android:strokeLineCap="round" />
     <path
-        android:pathData="M47,46 L61,54"
+        android:pathData="M43.27,48.635 L64.36,59.735"
         android:strokeColor="#FFFFFF"
-        android:strokeAlpha="0.85"
-        android:strokeWidth="3"
-        android:strokeLineCap="round"/>
+        android:strokeAlpha="0.92"
+        android:strokeWidth="2.775"
+        android:strokeLineCap="round" />
 
-    <!-- Share nodes: teal origin, white targets -->
-    <path
-        android:fillColor="#4DD0E1"
-        android:pathData="M47,46 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0"/>
+    <!-- Share nodes: origin + two targets -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M63,39 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0"/>
+        android:pathData="M43.27,48.635 m-5.55,0 a5.55,5.55 0 1,1 11.1,0 a5.55,5.55 0 1,1 -11.1,0" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M61,53 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0"/>
+        android:pathData="M64.36,37.535 m-4.81,0 a4.81,4.81 0 1,1 9.62,0 a4.81,4.81 0 1,1 -9.62,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M64.36,59.735 m-4.81,0 a4.81,4.81 0 1,1 9.62,0 a4.81,4.81 0 1,1 -9.62,0" />
 </vector>
