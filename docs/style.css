@@ -758,6 +758,49 @@ body[dir="rtl"] .s3-meta-tag {
   margin-right: auto;
 }
 
+/* ── RELEASE HIGHLIGHTS ──────────────────────────────────────────────────── */
+.whatsnew-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.whatsnew-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+  transition: all var(--trans-smooth);
+}
+
+.whatsnew-item:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.whatsnew-icon {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.whatsnew-item h4 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.whatsnew-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: var(--text-muted);
+}
+
 /* ── FEATURE GRID ────────────────────────────────────────────────────────── */
 .features-grid {
   display: grid;
@@ -1080,6 +1123,9 @@ body[dir="rtl"] .s3-meta-tag {
   }
   .features-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .whatsnew-grid {
+    grid-template-columns: 1fr;
   }
   .setup-stepper {
     grid-template-columns: repeat(2, 1fr);

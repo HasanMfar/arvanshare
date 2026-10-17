@@ -72,6 +72,17 @@ const I18N = {
     f6Title: "Polished Themes",
     f6Desc: "Deep indigo and vibrant cyan color schemes with native Dark Mode support out-of-the-box across all platforms.",
 
+    // What's New (release highlights)
+    wnTag: "What's New",
+    wnTitle: "New in v1.0.0-beta.3",
+    wnDesc: "This release brings voice notes to both clients and makes feed syncing faster and lighter.",
+    wn1Title: "Voice Notes",
+    wn1Desc: "Record and play inline voice notes on Android and Windows — AAC/M4A on Android, WAV on Windows. The audio stays on your S3 bucket and plays anywhere.",
+    wn2Title: "Instant Incremental Feed",
+    wn2Desc: "Refresh no longer re-downloads every post: only unseen posts are fetched, and posts deleted server-side are dropped from the local cache.",
+    wn3Title: "Fresh Brand Identity",
+    wn3Desc: "A new speech-bubble logo, a matching launcher icon (with an Android 13+ themed variant) and the new brand mark on the setup screen.",
+
     // Architecture
     archTag: "Under The Hood",
     archTitle: "Direct-to-S3 Data Architecture",
@@ -186,6 +197,17 @@ const I18N = {
 
     f6Title: "پوسته‌های دارک و لایت مدرن",
     f6Desc: "رنگ‌بندی ایندیگو و فیروزه‌ای چشم‌نواز با پشتیبانی پیش‌فرض از دارک مود در تمام کلاینت‌ها.",
+
+    // What's New (release highlights)
+    wnTag: "تازه در این نسخه",
+    wnTitle: "تازه‌های نسخه v1.0.0-beta.3",
+    wnDesc: "این نسخه پیام صوتی را به هر دو کلاینت اضافه می‌کند و همگام‌سازی فید را سریع‌تر و سبک‌تر می‌کند.",
+    wn1Title: "پیام صوتی (ویس)",
+    wn1Desc: "ضبط و پخش درون‌خطی ویس در اندروید و ویندوز؛ اندروید با AAC/M4A و ویندوز با WAV. فایل صوتی روی باکت S3 می‌ماند و همه‌جا پخش می‌شود.",
+    wn2Title: "فید فوری و افزایشی",
+    wn2Desc: "رفرش دیگر همهٔ پست‌ها را دوباره دانلود نمی‌کند: فقط پست‌های جدید گرفته می‌شوند و پست‌های حذف‌شده از کش گوشی پاک می‌شوند.",
+    wn3Title: "هویت بصری تازه",
+    wn3Desc: "لوگوی جدید حباب گفتگو، آیکون لانچر هماهنگ (به‌همراه نسخهٔ تم‌دار اندروید ۱۳+) و نشان برند تازه در صفحهٔ راه‌اندازی.",
 
     // Architecture
     archTag: "زیر ذره‌بین مهندسی",
