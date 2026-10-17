@@ -12,7 +12,7 @@ import java.io.File
  *
  * Not thread-safe by design — a recorder instance lives inside one screen.
  */
-class VoiceRecorder(context: Context) {
+class VoiceRecorder(private val context: Context) {
 
     private var recorder: MediaRecorder? = null
     private var outFile: File? = null

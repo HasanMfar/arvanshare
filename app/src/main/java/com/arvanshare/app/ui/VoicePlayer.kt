@@ -45,7 +45,6 @@ import kotlinx.coroutines.withContext
  */
 @Composable
 fun VoicePlayer(post: Post, vm: AppViewModel, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
     val file by produceState<File?>(null, post.mediaUrl) { value = vm.mediaFile(post) }
     var playing by remember { mutableStateOf(false) }
     var durationMs by remember { mutableIntStateOf(0) }
