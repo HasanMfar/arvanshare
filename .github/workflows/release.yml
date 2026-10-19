@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write   # needed to create GitHub releases and upload assets
@@ -28,12 +29,14 @@ jobs:
           distribution: "temurin"
           cache: gradle
 
-      - name: Decode release keystore
+      - name: Decode release keystore (optional secret)
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          mkdir -p keystore
-          echo "$KEYSTORE_BASE64" | base64 -di > keystore/release.jks
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            mkdir -p keystore
+            echo "$KEYSTORE_BASE64" | base64 -di > keystore/release.jks
+          fi
 
       - name: Make gradlew executable
         run: chmod +x gradlew

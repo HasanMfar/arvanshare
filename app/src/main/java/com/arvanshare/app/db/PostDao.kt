@@ -10,14 +10,29 @@ interface PostDao {
     @Query("SELECT * FROM posts ORDER BY timestamp DESC")
     fun observeAll(): Flow<List<PostEntity>>
 
+    @Query("SELECT * FROM posts WHERE room = :room ORDER BY timestamp DESC")
+    fun observeByRoom(room: String): Flow<List<PostEntity>>
+
+    @Query("SELECT * FROM posts WHERE room = :room ORDER BY timestamp DESC")
+    suspend fun getAllByRoom(room: String): List<PostEntity>
+
     @Query("SELECT * FROM posts ORDER BY timestamp DESC")
     suspend fun getAll(): List<PostEntity>
+
+    @Query("SELECT postId FROM posts WHERE room = :room")
+    suspend fun getAllIdsByRoom(room: String): List<String>
 
     @Query("SELECT postId FROM posts")
     suspend fun getAllIds(): List<String>
 
     @Query("DELETE FROM posts WHERE postId = :postId")
     suspend fun deleteById(postId: String)
+
+    @Query("DELETE FROM posts WHERE room = :room")
+    suspend fun deleteByRoom(room: String)
+
+    @Query("DELETE FROM posts")
+    suspend fun clearAll()
 
     @Upsert
     suspend fun upsert(entity: PostEntity)

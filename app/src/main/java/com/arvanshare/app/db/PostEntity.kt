@@ -15,6 +15,7 @@ data class PostEntity(
     val mediaName: String?,
     val mediaMime: String?,
     val timestamp: Long,
+    val room: String = "",
 ) {
     fun toPost() = Post(
         postId = postId,
@@ -25,10 +26,11 @@ data class PostEntity(
         mediaName = mediaName,
         mediaMime = mediaMime,
         timestamp = timestamp,
+        room = room,
     )
 
     companion object {
-        fun from(p: Post) = PostEntity(
+        fun from(p: Post, room: String = "") = PostEntity(
             postId = p.postId,
             author = p.author,
             text = p.text,
@@ -37,6 +39,7 @@ data class PostEntity(
             mediaName = p.mediaName,
             mediaMime = p.mediaMime,
             timestamp = p.timestamp,
+            room = if (p.room.isNotBlank()) p.room else room,
         )
     }
 }

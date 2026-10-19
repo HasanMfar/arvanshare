@@ -4,16 +4,21 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.arvanshare.app.data.ArvanRepository
+import com.arvanshare.app.data.BucketProfile
 import com.arvanshare.app.data.Comment
 import com.arvanshare.app.data.Post
+import com.arvanshare.app.data.RoomInfo
 import com.arvanshare.app.data.Settings
 import com.arvanshare.app.data.SettingsRepository
 import com.arvanshare.app.db.AppDatabase
 import java.io.File
+import java.util.UUID
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -32,6 +37,7 @@ data class DetailData(
     val likedByMe: Boolean,
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val dao = AppDatabase.get(application).postDao()
     private val settingsRepo = SettingsRepository(application)
@@ -40,9 +46,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val settings: StateFlow<Settings> = settingsRepo.settings
         .stateIn(viewModelScope, SharingStarted.Eagerly, Settings())
 
-    /** Feed UI reads from Room, so it renders instantly (and offline) from cache. */
-    val cachedPosts: StateFlow<List<Post>> = dao
-        .observeAll()
+    /** Feed UI reads from Room, scoped to activeRoom so switching rooms or buckets is clean. */
+    val cachedPosts: StateFlow<List<Post>> = settingsRepo.settings
+        .flatMapLatest { s -> dao.observeByRoom(s.activeRoom) }
         .map { list -> list.map { it.toPost() } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -58,12 +64,121 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _snackbar = MutableStateFlow<String?>(null)
     val snackbar: StateFlow<String?> = _snackbar.asStateFlow()
 
+    private val _rooms = MutableStateFlow<List<RoomInfo>>(emptyList())
+    val rooms: StateFlow<List<RoomInfo>> = _rooms.asStateFlow()
+
     fun consumeSnackbar() {
         _snackbar.value = null
     }
 
     fun saveSettings(s: Settings) {
-        viewModelScope.launch { settingsRepo.save(s) }
+        viewModelScope.launch {
+            // Ensure the active bucket profile is also synced in the profiles list
+            val profiles = s.profiles.toMutableList()
+            val activeId = if (s.activeProfileId.isNotBlank()) s.activeProfileId else UUID.randomUUID().toString()
+            val existingIndex = profiles.indexOfFirst { it.id == activeId }
+            val currentProfile = BucketProfile(
+                id = activeId,
+                label = if (existingIndex >= 0) profiles[existingIndex].label else s.bucket,
+                endpoint = s.endpoint,
+                bucket = s.bucket,
+                accessKey = s.accessKey,
+                secretKey = s.secretKey,
+                activeRoom = s.activeRoom,
+                activeRoomPassword = s.activeRoomPassword,
+            )
+            if (existingIndex >= 0) {
+                profiles[existingIndex] = currentProfile
+            } else {
+                profiles.add(currentProfile)
+            }
+            settingsRepo.save(s.copy(profiles = profiles, activeProfileId = activeId))
+        }
+    }
+
+    /** Add a new bucket profile and switch to it */
+    fun addAndSwitchBucket(profile: BucketProfile) {
+        viewModelScope.launch {
+            val s = settings.value
+            val newProfiles = s.profiles.filter { it.id != profile.id } + profile
+            val updated = s.copy(
+                endpoint = profile.endpoint,
+                bucket = profile.bucket,
+                accessKey = profile.accessKey,
+                secretKey = profile.secretKey,
+                activeRoom = profile.activeRoom,
+                activeRoomPassword = profile.activeRoomPassword,
+                profiles = newProfiles,
+                activeProfileId = profile.id,
+            )
+            settingsRepo.save(updated)
+            dao.clearAll()
+            refreshFeed()
+        }
+    }
+
+    /** Switch active bucket to an existing profile */
+    fun switchBucketProfile(profileId: String) {
+        viewModelScope.launch {
+            val s = settings.value
+            val target = s.profiles.find { it.id == profileId } ?: return@launch
+            val updated = s.copy(
+                endpoint = target.endpoint,
+                bucket = target.bucket,
+                accessKey = target.accessKey,
+                secretKey = target.secretKey,
+                activeRoom = target.activeRoom,
+                activeRoomPassword = target.activeRoomPassword,
+                activeProfileId = target.id,
+            )
+            settingsRepo.save(updated)
+            dao.clearAll()
+            refreshFeed()
+        }
+    }
+
+    /** Delete a bucket profile */
+    fun deleteBucketProfile(profileId: String) {
+        viewModelScope.launch {
+            val s = settings.value
+            val newProfiles = s.profiles.filter { it.id != profileId }
+            settingsRepo.save(s.copy(profiles = newProfiles))
+        }
+    }
+
+    /** Load all rooms available in the current bucket */
+    fun loadRooms() {
+        viewModelScope.launch {
+            val s = settings.value
+            if (!s.isComplete()) return@launch
+            repo.listRooms(s).onSuccess { list ->
+                _rooms.value = list
+            }
+        }
+    }
+
+    /** Switch room with password verification or creation */
+    fun switchRoom(room: String, password: String = "", onDone: (String?) -> Unit = {}) {
+        viewModelScope.launch {
+            _busy.value = true
+            val s = settings.value
+            val result = repo.verifyOrCreateRoom(s, room, password)
+            _busy.value = false
+            if (result.isSuccess) {
+                val updated = s.copy(
+                    activeRoom = room.trim(),
+                    activeRoomPassword = password.trim(),
+                )
+                settingsRepo.save(updated)
+                refreshFeed()
+                loadRooms()
+                onDone(null)
+            } else {
+                val errMsg = result.exceptionOrNull()?.message ?: "Failed to switch room"
+                _snackbar.value = errMsg
+                onDone(errMsg)
+            }
+        }
     }
 
     /** Tests the connection using the draft settings (not yet saved to DataStore). */

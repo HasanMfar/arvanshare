@@ -12,18 +12,29 @@ import pytest
 from moto import mock_aws
 
 from arvanshare import (
+    ROOMS_PREFIX,
+    __version__,
     build_client,
     bucket_name,
     comments_folder,
+    comments_prefix,
+    create_or_verify_room,
+    fetch_post,
     guess_mime,
+    hash_password,
     init_structure,
+    is_default_room,
     list_posts,
+    list_rooms,
     make_post_id,
     post_comments,
     post_json_key,
     post_likes,
     post_media_key,
+    post_prefix,
+    room_info_key,
     sanitize_filename,
+    sanitize_room,
     sanitize_user,
     toggle_like,
     upload_comment,
@@ -209,3 +220,139 @@ def test_like_keys_are_sanitized(s3, cfg):
     post_id = upload_post(s3, bucket_name(cfg), "Ali", "hi", None)
     toggle_like(s3, bucket_name(cfg), post_id, "Sara M")
     assert post_likes(s3, bucket_name(cfg), post_id) == ["Sara_M"]
+
+
+# ───────────────────────────────────────────────────────────────────────────── #
+#  Room support + simple passwords
+# ───────────────────────────────────────────────────────────────────────────── #
+
+def test_room_helpers_and_prefixes():
+    assert is_default_room("") is True
+    assert is_default_room("default") is True
+    assert is_default_room("main") is True
+    assert is_default_room("family") is False
+
+    assert post_prefix() == "posts/"
+    assert post_prefix("") == "posts/"
+    assert post_prefix("family") == "rooms/family/posts/"
+
+    assert comments_prefix() == "comments/"
+    assert comments_prefix("family") == "rooms/family/comments/"
+
+    assert room_info_key("family") == "rooms/family/room.json"
+    assert sanitize_room("My Family Room!") == "My_Family_Room_"
+
+
+def test_create_and_verify_room_without_password(s3, cfg):
+    info = create_or_verify_room(s3, bucket_name(cfg), "friends", password="", user="Ali")
+    assert info["name"] == "friends"
+    assert info["has_password"] is False
+    assert info["created_by"] == "Ali"
+
+    rooms = list_rooms(s3, bucket_name(cfg))
+    assert any(r["name"] == "friends" for r in rooms)
+
+
+def test_create_and_verify_room_with_password(s3, cfg):
+    info = create_or_verify_room(s3, bucket_name(cfg), "private", password="secret123", user="Sara")
+    assert info["name"] == "private"
+    assert info["has_password"] is True
+    assert info["password_hash"] == hash_password("secret123")
+
+    # Correct password succeeds
+    verified = create_or_verify_room(s3, bucket_name(cfg), "private", password="secret123", user="Reza")
+    assert verified["name"] == "private"
+
+    # Incorrect password raises ValueError
+    with pytest.raises(ValueError, match="Incorrect password for room"):
+        create_or_verify_room(s3, bucket_name(cfg), "private", password="wrongpassword", user="Eve")
+
+
+def test_room_post_isolation(s3, cfg):
+    # Upload to root feed
+    p_root = upload_post(s3, bucket_name(cfg), "Ali", "Root message")
+    # Upload to room 'family'
+    p_family = upload_post(s3, bucket_name(cfg), "Sara", "Family message", room="family")
+    # Upload to room 'work'
+    p_work = upload_post(s3, bucket_name(cfg), "Reza", "Work message", room="work")
+
+    # Root listing only has root post
+    root_posts = list_posts(s3, bucket_name(cfg))
+    assert len(root_posts) == 1
+    assert root_posts[0]["post_id"] == p_root
+
+    # Family listing only has family post
+    family_posts = list_posts(s3, bucket_name(cfg), room="family")
+    assert len(family_posts) == 1
+    assert family_posts[0]["post_id"] == p_family
+
+    # Work listing only has work post
+    work_posts = list_posts(s3, bucket_name(cfg), room="work")
+    assert len(work_posts) == 1
+    assert work_posts[0]["post_id"] == p_work
+
+
+def test_room_likes_and_comments(s3, cfg):
+    post_id = upload_post(s3, bucket_name(cfg), "Ali", "Room post", room="family")
+
+    assert toggle_like(s3, bucket_name(cfg), post_id, "Sara", room="family") is True
+    assert post_likes(s3, bucket_name(cfg), post_id, room="family") == ["Sara"]
+
+    upload_comment(s3, bucket_name(cfg), post_id, "Reza", "Great room!", room="family")
+    comments = post_comments(s3, bucket_name(cfg), post_id, room="family")
+    assert len(comments) == 1
+    assert comments[0]["text"] == "Great room!"
+
+
+def test_version_graduated_to_stable():
+    assert __version__ == "1.0.0"
+    assert "beta" not in __version__
+
+
+def test_empty_and_unicode_room_names():
+    assert sanitize_room("") == "general"
+    assert sanitize_room("  ") == "general"
+    assert sanitize_room("سلام") == "____"
+    assert sanitize_room("my-room_1.0") == "my-room_1.0"
+
+
+def test_list_rooms_empty(s3, cfg):
+    assert list_rooms(s3, bucket_name(cfg)) == []
+
+
+def test_room_password_edge_cases(s3, cfg):
+    info = create_or_verify_room(s3, bucket_name(cfg), "secret-room", password="  pass123  ", user="Ali")
+    assert info["has_password"] is True
+    assert info["password_hash"] == hash_password("pass123")
+
+    # Correct stripped password succeeds
+    assert create_or_verify_room(s3, bucket_name(cfg), "secret-room", password="pass123")["name"] == "secret-room"
+
+    # Blank password for protected room fails
+    with pytest.raises(ValueError, match="Incorrect password for room"):
+        create_or_verify_room(s3, bucket_name(cfg), "secret-room", password="")
+
+
+def test_room_media_attachment(s3, cfg, tmp_path):
+    media_file = tmp_path / "note.pdf"
+    media_file.write_bytes(b"%PDF-1.4 dummy content")
+
+    post_id = upload_post(
+        s3,
+        bucket_name(cfg),
+        user="Farhad",
+        text="Check this document",
+        media_path=str(media_file),
+        room="finance",
+    )
+
+    post = fetch_post(s3, bucket_name(cfg), post_id, room="finance")
+    assert post["room"] == "finance"
+    assert post["media_name"] == "note.pdf"
+    assert post["media_url"] == f"rooms/finance/posts/{post_id}_note.pdf"
+    assert post["media_type"] == "file"
+
+    obj = s3.get_object(Bucket=bucket_name(cfg), Key=post["media_url"])
+    assert obj["Body"].read() == b"%PDF-1.4 dummy content"
+
+

@@ -23,10 +23,14 @@ from arvanshare import (
     __version__,
     build_client,
     bucket_name,
+    create_or_verify_room,
     init_structure,
+    is_default_room,
     list_posts,
+    list_rooms,
     post_comments,
     post_likes,
+    sanitize_room,
     toggle_like,
     upload_comment,
     upload_post,
@@ -209,23 +213,27 @@ def run_async(widget, fn, on_done) -> None:
 def load_config_dict() -> dict:
     cfg = configparser.ConfigParser()
     if os.path.exists(CONFIG_PATH):
-        cfg.read(CONFIG_PATH)
+        cfg.read(CONFIG_PATH, encoding="utf-8")
         return dict(cfg["arvan"]) if "arvan" in cfg else {}
     return {}
 
 
 def save_config_dict(values: dict) -> None:
     cfg = configparser.ConfigParser()
+    if os.path.exists(CONFIG_PATH):
+        try:
+            cfg.read(CONFIG_PATH, encoding="utf-8")
+        except Exception:
+            pass
     cfg["arvan"] = {
-        # "name" must be saved too — it is part of the identity used for
-        # post ids and like markers (bugfix: it used to be dropped here,
-        # forcing re-setup after every restart).
-        "name":       values.get("name", ""),
-        "endpoint":   values.get("endpoint", ""),
-        "region":     values.get("region", "ir-thr-at1"),
-        "bucket":     values.get("bucket", ""),
-        "access_key": values.get("access_key", ""),
-        "secret_key": values.get("secret_key", ""),
+        "name":          values.get("name", ""),
+        "endpoint":      values.get("endpoint", ""),
+        "region":        values.get("region", "ir-thr-at1"),
+        "bucket":        values.get("bucket", ""),
+        "access_key":    values.get("access_key", ""),
+        "secret_key":    values.get("secret_key", ""),
+        "room":          values.get("room", ""),
+        "room_password": values.get("room_password", ""),
     }
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         cfg.write(f)
@@ -346,6 +354,182 @@ class VoiceRecorder:
 
 
 # ───────────────────────────────────────────────────────────────────────────── #
+#  Onboarding / Help Guide dialog
+# ───────────────────────────────────────────────────────────────────────────── #
+
+class OnboardingDialog(tk.Toplevel):
+    """Guide explaining setup, API keys, private rooms, and multiple buckets."""
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("How ArvanShare Works")
+        self.geometry("520x480")
+        self.configure(bg=THEME["bg"])
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        hdr = tk.Frame(self, bg=THEME["surface2"], padx=20, pady=12)
+        hdr.pack(fill="x")
+        tk.Label(hdr, text="🚀  Welcome to ArvanShare",
+                 bg=THEME["surface2"], fg=THEME["primary"],
+                 font=THEME["font_heading"]).pack(anchor="w")
+        tk.Label(hdr, text="A private feed for your circle, stored directly on ArvanCloud S3.",
+                 bg=THEME["surface2"], fg=THEME["fg2"],
+                 font=THEME["font_small"]).pack(anchor="w", pady=(2, 0))
+
+        body = tk.Frame(self, bg=THEME["bg"], padx=20, pady=14)
+        body.pack(fill="both", expand=True)
+
+        guide_text = (
+            "ArvanShare is serverless — no central database or backend.\n"
+            "All posts, voice notes, and images live directly in an S3 bucket.\n\n"
+            "Quick Setup Guide:\n\n"
+            "1. Create a Bucket:\n"
+            "   Log into panel.arvancloud.ir → Object Storage → create a bucket.\n\n"
+            "2. Generate API Keys:\n"
+            "   Under Storage → API Keys, create an Access Key and Secret Key.\n\n"
+            "3. Endpoint:\n"
+            "   Use https://s3.ir-thr-at1.arvanstorage.ir (or your region endpoint).\n\n"
+            "4. Share with your Circle:\n"
+            "   Send the bucket name and keys to friends/family so everyone\n"
+            "   connects to the exact same bucket.\n\n"
+            "5. Private Rooms & Simple Passwords:\n"
+            "   Use rooms (e.g. #family, #work) with optional simple passwords to\n"
+            "   keep topics or sub-groups separate and private.\n\n"
+            "6. Multiple Buckets:\n"
+            "   You can switch between multiple buckets anytime in Settings."
+        )
+        tk.Label(body, text=guide_text, bg=THEME["bg"], fg=THEME["fg"],
+                 font=THEME["font_body"], justify="left", anchor="w").pack(anchor="w")
+
+        btn_bar = tk.Frame(self, bg=THEME["bg"], padx=20, pady=12)
+        btn_bar.pack(fill="x")
+        tk.Button(btn_bar, text="Got it!", command=self.destroy,
+                  bg=THEME["primary"], fg="#ffffff",
+                  activebackground=THEME["primary_dark"], activeforeground="#ffffff",
+                  relief="flat", padx=16, pady=6, font=THEME["font_body"],
+                  cursor="hand2").pack(side="right")
+
+
+# ───────────────────────────────────────────────────────────────────────────── #
+#  Room switcher & creation dialog
+# ───────────────────────────────────────────────────────────────────────────── #
+
+class RoomDialog(tk.Toplevel):
+    """Dialog to list, create, and join rooms with simple password protection."""
+
+    def __init__(self, parent, values: dict, current_room: str, on_room_changed):
+        super().__init__(parent)
+        self.title("Select Room")
+        self.geometry("440x400")
+        self.configure(bg=THEME["bg"])
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        self.values = values
+        self.current_room = current_room
+        self.on_room_changed = on_room_changed
+
+        hdr = tk.Frame(self, bg=THEME["surface2"], padx=16, pady=10)
+        hdr.pack(fill="x")
+        tk.Label(hdr, text="🔒  Select or Create Room",
+                 bg=THEME["surface2"], fg=THEME["primary"],
+                 font=THEME["font_heading"]).pack(anchor="w")
+
+        body = tk.Frame(self, bg=THEME["bg"], padx=16, pady=10)
+        body.pack(fill="both", expand=True)
+
+        tk.Label(body, text="Existing Rooms:", bg=THEME["bg"], fg=THEME["fg2"],
+                 font=THEME["font_small"]).pack(anchor="w", pady=(0, 4))
+
+        self._listbox = tk.Listbox(body, bg=THEME["surface2"], fg=THEME["fg"],
+                                   selectbackground=THEME["primary"], relief="flat",
+                                   font=THEME["font_body"], height=5)
+        self._listbox.pack(fill="x", pady=(0, 10))
+        self._listbox.insert("end", "🌐  General (Default Feed)")
+
+        self._rooms_data = []
+        self._load_rooms()
+
+        # Join / Create fields
+        tk.Label(body, text="Join or Create Room Name:", bg=THEME["bg"], fg=THEME["fg2"],
+                 font=THEME["font_small"]).pack(anchor="w")
+        self._room_entry = tk.Entry(body, bg=THEME["surface2"], fg=THEME["fg"],
+                                    insertbackground=THEME["fg"], relief="flat",
+                                    font=THEME["font_body"])
+        self._room_entry.pack(fill="x", ipady=4, pady=(2, 6))
+
+        tk.Label(body, text="Password (if protected or for new room):", bg=THEME["bg"], fg=THEME["fg2"],
+                 font=THEME["font_small"]).pack(anchor="w")
+        self._pwd_entry = tk.Entry(body, bg=THEME["surface2"], fg=THEME["fg"],
+                                   insertbackground=THEME["fg"], relief="flat",
+                                   font=THEME["font_body"], show="•")
+        self._pwd_entry.pack(fill="x", ipady=4, pady=(2, 10))
+
+        btn_bar = tk.Frame(self, bg=THEME["bg"], padx=16, pady=10)
+        btn_bar.pack(fill="x")
+
+        tk.Button(btn_bar, text="Enter Room →", command=self._submit,
+                  bg=THEME["primary"], fg="#ffffff",
+                  activebackground=THEME["primary_dark"], activeforeground="#ffffff",
+                  relief="flat", padx=12, pady=5, font=THEME["font_body"],
+                  cursor="hand2").pack(side="left")
+
+        tk.Button(btn_bar, text="Cancel", command=self.destroy,
+                  bg=THEME["surface2"], fg=THEME["fg"], relief="flat",
+                  padx=12, pady=5, font=THEME["font_body"],
+                  cursor="hand2").pack(side="left", padx=6)
+
+    def _load_rooms(self):
+        def work():
+            cfg = configparser.ConfigParser()
+            cfg["arvan"] = self.values
+            return list_rooms(build_client(cfg), self.values["bucket"])
+
+        def done(kind, payload):
+            if kind == "ok":
+                self._rooms_data = payload
+                for r in payload:
+                    pwd_badge = " [🔒 password]" if r.get("has_password") else ""
+                    self._listbox.insert("end", f"#{r['name']}{pwd_badge}")
+
+        run_async(self, work, done)
+
+    def _submit(self):
+        sel = self._listbox.curselection()
+        typed_room = self._room_entry.get().strip()
+        pwd = self._pwd_entry.get().strip()
+
+        if typed_room:
+            target_room = typed_room
+        elif sel:
+            idx = sel[0]
+            if idx == 0:
+                target_room = ""
+            else:
+                target_room = self._rooms_data[idx - 1]["name"]
+        else:
+            messagebox.showwarning("No room selected", "Select a room from the list or type a room name.", parent=self)
+            return
+
+        def work():
+            cfg = configparser.ConfigParser()
+            cfg["arvan"] = self.values
+            return create_or_verify_room(build_client(cfg), self.values["bucket"], target_room, pwd, self.values.get("name", "user"))
+
+        def done(kind, payload):
+            if kind == "ok":
+                self.on_room_changed(target_room, pwd)
+                self.destroy()
+            else:
+                messagebox.showerror("Room access failed", str(payload), parent=self)
+
+        run_async(self, work, done)
+
+
+# ───────────────────────────────────────────────────────────────────────────── #
 #  Settings dialog
 # ───────────────────────────────────────────────────────────────────────────── #
 
@@ -415,6 +599,8 @@ class SetupDialog(tk.Toplevel):
         self._test_btn = tk.Button(btns, text="Test connection",
                                    command=self.test, **self._btn_style())
         self._test_btn.pack(side="left", padx=(0, 6))
+        tk.Button(btns, text="📖 Setup Guide", command=lambda: OnboardingDialog(self),
+                  **self._btn_style()).pack(side="left", padx=(0, 6))
         tk.Button(btns, text="Save", command=self.save,
                   **self._btn_style(accent=True)).pack(side="left", padx=(0, 6))
         tk.Button(btns, text="Cancel", command=self.cancel,
@@ -504,9 +690,9 @@ class SetupDialog(tk.Toplevel):
 # ───────────────────────────────────────────────────────────────────────────── #
 
 class ComposeDialog(tk.Toplevel):
-    def __init__(self, root, values: dict, on_posted):
+    def __init__(self, root, values: dict, on_posted, room: str = ""):
         super().__init__(root)
-        self.title("New post")
+        self.title("New post" + (f" (#{room})" if room else ""))
         self.geometry("520x380")
         self.configure(bg=THEME["bg"])
         self.resizable(False, False)
@@ -514,6 +700,7 @@ class ComposeDialog(tk.Toplevel):
         self.grab_set()
         self.values   = values
         self.on_posted = on_posted
+        self.room     = room
         self._file_path = None
         self._recorder = VoiceRecorder()
         self._rec_job  = None
@@ -521,7 +708,8 @@ class ComposeDialog(tk.Toplevel):
         # ── Header ──────────────────────────────────────────────────────────
         hdr = tk.Frame(self, bg=THEME["surface2"], padx=16, pady=10)
         hdr.pack(fill="x")
-        tk.Label(hdr, text=f"✏  Posting as  {values.get('name', '')}",
+        room_label = f" in #{room}" if room else ""
+        tk.Label(hdr, text=f"✏  Posting as  {values.get('name', '')}{room_label}",
                  bg=THEME["surface2"], fg=THEME["primary"],
                  font=THEME["font_heading"]).pack(anchor="w")
 
@@ -675,7 +863,7 @@ class ComposeDialog(tk.Toplevel):
             cfg = configparser.ConfigParser()
             cfg["arvan"] = self.values
             return upload_post(build_client(cfg), self.values["bucket"],
-                               self.values["name"], text, self._file_path)
+                               self.values["name"], text, self._file_path, room=self.room)
 
         def done(kind, payload):
             if kind == "ok":
@@ -693,7 +881,7 @@ class ComposeDialog(tk.Toplevel):
 # ───────────────────────────────────────────────────────────────────────────── #
 
 class DetailDialog(tk.Toplevel):
-    def __init__(self, root, values: dict, post: dict, on_changed):
+    def __init__(self, root, values: dict, post: dict, on_changed, room: str = ""):
         super().__init__(root)
         author = post.get("author", "")
         self.title(f"Post by {author}")
@@ -705,6 +893,7 @@ class DetailDialog(tk.Toplevel):
         self.values     = values
         self.post       = post
         self.on_changed = on_changed
+        self.room       = room
         self._me        = values.get("name", "")
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
@@ -853,8 +1042,8 @@ class DetailDialog(tk.Toplevel):
             cfg = configparser.ConfigParser()
             cfg["arvan"] = self.values
             client = build_client(cfg)
-            likes    = post_likes(client, self.values["bucket"], post_id)
-            comments = post_comments(client, self.values["bucket"], post_id)
+            likes    = post_likes(client, self.values["bucket"], post_id, room=self.room)
+            comments = post_comments(client, self.values["bucket"], post_id, room=self.room)
             return likes, comments
 
         def done(kind, payload):
@@ -900,7 +1089,7 @@ class DetailDialog(tk.Toplevel):
             cfg = configparser.ConfigParser()
             cfg["arvan"] = self.values
             return toggle_like(build_client(cfg), self.values["bucket"],
-                               self.post["post_id"], self._me)
+                               self.post["post_id"], self._me, room=self.room)
 
         def done(kind, payload):
             if kind == "ok":
@@ -921,7 +1110,7 @@ class DetailDialog(tk.Toplevel):
             cfg = configparser.ConfigParser()
             cfg["arvan"] = self.values
             upload_comment(build_client(cfg), self.values["bucket"],
-                           self.post["post_id"], self._me, text)
+                           self.post["post_id"], self._me, text, room=self.room)
 
         def done(kind, payload):
             if kind == "ok":
@@ -1026,6 +1215,8 @@ class ArvanDesktopApp:
     def __init__(self, root: tk.Tk):
         self.root    = root
         self.values  = load_config_dict()
+        self.room    = self.values.get("room", "")
+        self.room_password = self.values.get("room_password", "")
         self.posts: list[dict] = []
 
         root.title("ArvanShare")
@@ -1051,7 +1242,7 @@ class ArvanDesktopApp:
         # Brand name
         tk.Label(toolbar, text="ArvanShare",
                  bg=THEME["surface2"], fg=THEME["primary"],
-                 font=("Segoe UI", 13, "bold")).pack(side="left", padx=(4, 20))
+                 font=("Segoe UI", 13, "bold")).pack(side="left", padx=(4, 16))
 
         btn_kw = dict(
             bg=THEME["surface2"], fg=THEME["fg"],
@@ -1062,8 +1253,13 @@ class ArvanDesktopApp:
                   command=self.open_compose, **btn_kw).pack(side="left", padx=3)
         tk.Button(toolbar, text="⟳  Refresh",
                   command=self.refresh,      **btn_kw).pack(side="left", padx=3)
+        self._room_btn = tk.Button(toolbar, text=self._room_label(),
+                                   command=self.open_room_dialog, **btn_kw)
+        self._room_btn.pack(side="left", padx=3)
         tk.Button(toolbar, text="⚙  Settings",
                   command=self.open_setup,   **btn_kw).pack(side="left", padx=3)
+        tk.Button(toolbar, text="📖  Guide",
+                  command=self.open_guide,   **btn_kw).pack(side="left", padx=3)
 
         self._user_lbl = tk.Label(toolbar, text="", bg=THEME["surface2"],
                                   fg=THEME["fg2"], font=THEME["font_small"])
@@ -1129,13 +1325,35 @@ class ArvanDesktopApp:
         self._status("Settings saved.", THEME["success"])
         self.refresh()
 
+    def _room_label(self) -> str:
+        return "🌐  General" if is_default_room(self.room) else f"🔒  #{self.room}"
+
+    def open_room_dialog(self):
+        if not self._configured():
+            messagebox.showwarning("Not configured", "Please configure connection settings first.")
+            return
+        RoomDialog(self.root, self.values, self.room, self._on_room_changed)
+
+    def _on_room_changed(self, new_room: str, password: str = ""):
+        self.room = new_room
+        self.room_password = password
+        self.values["room"] = new_room
+        self.values["room_password"] = password
+        save_config_dict(self.values)
+        self._room_btn.config(text=self._room_label())
+        self.refresh()
+
+    def open_guide(self):
+        OnboardingDialog(self.root)
+
     def open_compose(self):
         if not self._configured():
             messagebox.showwarning("Not configured",
                                    "Open Settings and enter your details first.")
             return
         ComposeDialog(self.root, self.values,
-                      on_posted=lambda _pid: self.refresh())
+                      on_posted=lambda _pid: self.refresh(),
+                      room=self.room)
 
     def open_detail(self, _event=None):
         sel = self._tree.selection()
@@ -1146,18 +1364,19 @@ class ArvanDesktopApp:
             return
         post = next((p for p in self.posts if p.get("post_id") == post_id), None)
         if post:
-            DetailDialog(self.root, self.values, post, on_changed=self.refresh)
+            DetailDialog(self.root, self.values, post, on_changed=self.refresh, room=self.room)
 
     def refresh(self):
         if not self._configured():
             return
-        self._status("Loading feed…")
+        room_name = "General" if is_default_room(self.room) else f"#{self.room}"
+        self._status(f"Loading feed for {room_name}…")
         self._spinner.start()
 
         def work():
             cfg = configparser.ConfigParser()
             cfg["arvan"] = self.values
-            return list_posts(build_client(cfg), self.values["bucket"])
+            return list_posts(build_client(cfg), self.values["bucket"], room=self.room)
 
         def done(kind, payload):
             self._spinner.stop()

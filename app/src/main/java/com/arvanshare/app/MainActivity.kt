@@ -5,12 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arvanshare.app.ui.ComposePostScreen
 import com.arvanshare.app.ui.FeedScreen
 import com.arvanshare.app.ui.PostDetailScreen
@@ -34,7 +33,7 @@ fun AppRoot(vm: AppViewModel = viewModel()) {
     val settings by vm.settings.collectAsStateWithLifecycle()
 
     if (!settings.setupComplete) {
-        SetupScreen(vm)
+        SetupScreen(vm = vm)
         return
     }
 
@@ -48,6 +47,7 @@ fun AppRoot(vm: AppViewModel = viewModel()) {
                     vm.openDetail(post)
                     nav.navigate("detail/${post.postId}")
                 },
+                onOpenSettings = { nav.navigate("settings") },
             )
         }
         composable("compose") {
@@ -55,6 +55,9 @@ fun AppRoot(vm: AppViewModel = viewModel()) {
         }
         composable("detail/{postId}") {
             PostDetailScreen(vm = vm, onBack = { nav.popBackStack() })
+        }
+        composable("settings") {
+            SetupScreen(vm = vm, onBack = { nav.popBackStack() })
         }
     }
 }

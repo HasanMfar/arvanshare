@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.0.0] — 2026-10-19
+
+### Added
+- **Interactive Onboarding Tutorial Guide**: Step-by-step popup guide for new users walking through ArvanCloud S3 bucket creation, obtaining S3 endpoint credentials, generating Access/Secret API keys, and connecting client applications (available in Android and Windows desktop).
+- **Multi-Bucket & Profile Management**: Switch seamlessly between multiple buckets and profiles (e.g., Family, Team, Work) directly from Settings. Edit endpoints, bucket names, and credentials without clearing local storage.
+- **Private Room Support with Password Protection**: Segment posts into dedicated private rooms protected by simple room passwords across all clients (Android app, desktop GUI, and Python CLI). Posts, voice notes, comments, and likes remain isolated within each room.
+- **Automated CI/CD Release Pipeline**: GitHub Actions workflow (`release.yml`) that runs offline mock S3 tests, builds signed production Android APKs, compiles portable Windows executables, and automatically publishes GitHub releases on version tags.
+
+### Changed
+- Graduated ArvanShare from beta to official stable `1.0.0` release.
+- Bumped Android app version code to `4` (`versionName = "1.0.0"`).
+- Updated CLI, desktop client, landing page, and documentation to stable `1.0.0`.
+
 ## [1.0.0-beta.3] — 2026-10-17
 
 ### Added

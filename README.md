@@ -174,7 +174,7 @@ To use ArvanShare, you only need one shared ArvanCloud Object Storage bucket. Yo
 
 ## 🔐 Automated Releases (GitHub Actions)
 
-When a version tag (e.g. `v1.0.0-beta.3`) is pushed to GitHub, the CI/CD pipeline automatically:
+When a version tag (e.g. `v1.0.0`) is pushed to GitHub, the CI/CD pipeline automatically:
 1. Builds and signs the Android APK using Android Keystore secrets.
 2. Runs the Python test suite and compiles the standalone Windows `.exe` using PyInstaller.
 3. Publishes a GitHub Release with both assets attached.

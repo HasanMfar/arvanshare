@@ -14,8 +14,8 @@ android {
         applicationId = "com.arvanshare.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.0-beta.3"
+        versionCode = 4
+        versionName = "1.0.0"
     }
 
     // ── Signing ──────────────────────────────────────────────────────────────
@@ -44,7 +44,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            val releaseKs = signingConfigs.getByName("release")
+            if (releaseKs.storeFile?.exists() == true && !releaseKs.storePassword.isNullOrEmpty()) {
+                signingConfig = releaseKs
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 

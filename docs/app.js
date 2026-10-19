@@ -74,14 +74,14 @@ const I18N = {
 
     // What's New (release highlights)
     wnTag: "What's New",
-    wnTitle: "New in v1.0.0-beta.3",
-    wnDesc: "This release brings voice notes to both clients and makes feed syncing faster and lighter.",
-    wn1Title: "Voice Notes",
-    wn1Desc: "Record and play inline voice notes on Android and Windows — AAC/M4A on Android, WAV on Windows. The audio stays on your S3 bucket and plays anywhere.",
-    wn2Title: "Instant Incremental Feed",
-    wn2Desc: "Refresh no longer re-downloads every post: only unseen posts are fetched, and posts deleted server-side are dropped from the local cache.",
-    wn3Title: "Fresh Brand Identity",
-    wn3Desc: "A new speech-bubble logo, a matching launcher icon (with an Android 13+ themed variant) and the new brand mark on the setup screen.",
+    wnTitle: "New in v1.0.0",
+    wnDesc: "Official stable release featuring private rooms, multi-bucket profiles, and an interactive onboarding guide.",
+    wn1Title: "Private Rooms & Passwords",
+    wn1Desc: "Segment posts into password-protected rooms across Android, Windows, and CLI. Isolated feeds for team, family, and projects.",
+    wn2Title: "Multi-Bucket & Profiles",
+    wn2Desc: "Switch seamlessly between multiple S3 buckets and profiles without wiping local storage or re-entering keys.",
+    wn3Title: "Interactive Setup Guide",
+    wn3Desc: "Step-by-step popup tutorial guiding new users through ArvanCloud bucket creation, endpoints, and credentials.",
 
     // Architecture
     archTag: "Under The Hood",
@@ -200,14 +200,14 @@ const I18N = {
 
     // What's New (release highlights)
     wnTag: "تازه در این نسخه",
-    wnTitle: "تازه‌های نسخه v1.0.0-beta.3",
-    wnDesc: "این نسخه پیام صوتی را به هر دو کلاینت اضافه می‌کند و همگام‌سازی فید را سریع‌تر و سبک‌تر می‌کند.",
-    wn1Title: "پیام صوتی (ویس)",
-    wn1Desc: "ضبط و پخش درون‌خطی ویس در اندروید و ویندوز؛ اندروید با AAC/M4A و ویندوز با WAV. فایل صوتی روی باکت S3 می‌ماند و همه‌جا پخش می‌شود.",
-    wn2Title: "فید فوری و افزایشی",
-    wn2Desc: "رفرش دیگر همهٔ پست‌ها را دوباره دانلود نمی‌کند: فقط پست‌های جدید گرفته می‌شوند و پست‌های حذف‌شده از کش گوشی پاک می‌شوند.",
-    wn3Title: "هویت بصری تازه",
-    wn3Desc: "لوگوی جدید حباب گفتگو، آیکون لانچر هماهنگ (به‌همراه نسخهٔ تم‌دار اندروید ۱۳+) و نشان برند تازه در صفحهٔ راه‌اندازی.",
+    wnTitle: "تازه‌های نسخه v1.0.0",
+    wnDesc: "ارتقا به نسخه رسمی و پایدار همراه با روم‌های خصوصی، مدیریت چند باکت و راهنمای تعاملی راه‌اندازی.",
+    wn1Title: "روم‌های خصوصی و رمزگذاری",
+    wn1Desc: "دسته‌بندی پست‌ها در روم‌های مجزا با رمز عبور در اندروید، ویندوز و خط فرمان با حفظ کامل حریم خصوصی.",
+    wn2Title: "مدیریت چند باکت و پروفایل",
+    wn2Desc: "جابه‌جایی آسان بین باکت‌ها و حساب‌های مختلف بدون نیاز به پاک کردن داده‌ها یا تنظیمات قبلی.",
+    wn3Title: "راهنمای تعاملی راه‌اندازی",
+    wn3Desc: "آموزش گام‌به‌گام تصویری ساخت باکت آروان‌کلاد، دریافت کلیدها و اتصال سریع برنامه.",
 
     // Architecture
     archTag: "زیر ذره‌بین مهندسی",
