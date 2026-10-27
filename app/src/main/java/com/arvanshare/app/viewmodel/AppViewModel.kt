@@ -137,12 +137,41 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Delete a bucket profile */
+    /** Delete a bucket profile and rebind the active selection to a remaining profile when needed. */
     fun deleteBucketProfile(profileId: String) {
         viewModelScope.launch {
             val s = settings.value
-            val newProfiles = s.profiles.filter { it.id != profileId }
-            settingsRepo.save(s.copy(profiles = newProfiles))
+            val remainingProfiles = s.profiles.filter { it.id != profileId }
+
+            val updated = if (s.activeProfileId == profileId) {
+                val nextProfile = remainingProfiles.firstOrNull()
+                if (nextProfile == null) {
+                    s.copy(
+                        profiles = remainingProfiles,
+                        activeProfileId = "",
+                    )
+                } else {
+                    s.copy(
+                        endpoint = nextProfile.endpoint,
+                        bucket = nextProfile.bucket,
+                        accessKey = nextProfile.accessKey,
+                        secretKey = nextProfile.secretKey,
+                        activeRoom = nextProfile.activeRoom,
+                        activeRoomPassword = nextProfile.activeRoomPassword,
+                        profiles = remainingProfiles,
+                        activeProfileId = nextProfile.id,
+                    )
+                }
+            } else {
+                s.copy(profiles = remainingProfiles)
+            }
+
+            settingsRepo.save(updated)
+
+            if (s.activeProfileId == profileId) {
+                dao.clearAll()
+                refreshFeed()
+            }
         }
     }
 
